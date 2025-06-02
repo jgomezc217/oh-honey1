@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Inventario - Miel Picante</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3b82f6; /* Blue-500 */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: none; /* Hidden by default */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Custom scrollbar for product list if it gets too long */
+        select[multiple], select[size] {
+            scrollbar-width: thin;
+            scrollbar-color: #3b82f6 #e2e8f0; /* blue-500 slate-200 */
+        }
+        select[multiple]::-webkit-scrollbar, select[size]::-webkit-scrollbar {
+            width: 8px;
+        }
+        select[multiple]::-webkit-scrollbar-track, select[size]::-webkit-scrollbar-track {
+            background: #e2e8f0; /* slate-200 */
+            border-radius: 10px;
+        }
+        select[multiple]::-webkit-scrollbar-thumb, select[size]::-webkit-scrollbar-thumb {
+            background-color: #3b82f6; /* blue-500 */
+            border-radius: 10px;
+            border: 2px solid #e2e8f0; /* slate-200 */
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white shadow-2xl rounded-xl p-6 md:p-10 w-full max-w-2xl">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-700">🍯 Control de Inventario</h1>
+            <p class="text-slate-600 mt-2">Gestiona las entradas y salidas de tus mieles picantes.</p>
+        </header>
+
+        <form id="inventoryForm" class="space-y-6">
+            <div>
+                <label for="producto" class="block text-sm font-medium text-slate-700 mb-1">Producto:</label>
+                <select id="producto" name="producto" required
+                        class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out bg-white">
+                    <option value="" disabled selected>Selecciona un producto...</option>
+                    <option value="Miel Picante Nivel 1 botella 350 ml">Miel Picante Nivel 1 botella 350 ml</option>
+                    <option value="Miel Picante Nivel 2 botella 350 ml">Miel Picante Nivel 2 botella 350 ml</option>
+                    <option value="Miel Picante Nivel 3 botella 350 ml">Miel Picante Nivel 3 botella 350 ml</option>
+                    <option value="Miel Picante Nivel 1 sachet">Miel Picante Nivel 1 sachet</option>
+                    <option value="Miel Picante Nivel 2 sachet">Miel Picante Nivel 2 sachet</option>
+                    <option value="Miel Picante Nivel 3 sachet">Miel Picante Nivel 3 sachet</option>
+                    <option value="Miel Picante Nivel 1 galon">Miel Picante Nivel 1 galón</option>
+                    <option value="Miel Picante Nivel 2 galon">Miel Picante Nivel 2 galón</option>
+                    <option value="Miel Picante Nivel 3 galon">Miel Picante Nivel 3 galón</option>
+                </select>
+                <div class="mt-2 text-sm text-slate-600">
+                    Stock Actual: <span id="stockActual" class="font-semibold">N/A</span>
+                    <button type="button" id="refreshStockBtn" class="ml-2 text-xs px-2 py-1 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors">Actualizar Stock</button>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Tipo de Movimiento:</label>
+                <div class="flex items-center space-x-4">
+                    <label class="flex items-center">
+                        <input type="radio" id="tipoIngreso" name="tipoMovimiento" value="Ingreso" required checked
+                               class="h-4 w-4 text-sky-600 border-slate-300 focus:ring-sky-500">
+                        <span class="ml-2 text-slate-700">Ingreso de Mercadería</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" id="tipoSalida" name="tipoMovimiento" value="Salida" required
+                               class="h-4 w-4 text-sky-600 border-slate-300 focus:ring-sky-500">
+                        <span class="ml-2 text-slate-700">Salida de Mercadería</span>
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <label for="cantidad" class="block text-sm font-medium text-slate-700 mb-1">Cantidad:</label>
+                <input type="number" id="cantidad" name="cantidad" required min="1"
+                       class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out bg-white"
+                       placeholder="Ej: 10">
+            </div>
+
+            <div id="camposSalida" class="space-y-6 hidden">
+                <div>
+                    <label for="precioVenta" class="block text-sm font-medium text-slate-700 mb-1">Precio de Venta (Total por esta salida, USD):</label>
+                    <input type="number" id="precioVenta" name="precioVenta" step="0.01" min="0"
+                           class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out bg-white"
+                           placeholder="Ej: 25.50">
+                </div>
+                <div>
+                    <label for="descripcionVenta" class="block text-sm font-medium text-slate-700 mb-1">Descripción de la Venta/Salida:</label>
+                    <textarea id="descripcionVenta" name="descripcionVenta" rows="3"
+                              class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out bg-white"
+                              placeholder="Ej: Venta a cliente minorista, ajuste de inventario, etc."></textarea>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end space-x-3 pt-4">
+                <div id="loader" class="loader"></div>
+                <button type="submit"
+                        class="bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 transition duration-150 ease-in-out">
+                    Registrar Movimiento
+                </button>
+            </div>
+        </form>
+        <div id="message" class="mt-6 p-4 rounded-lg text-center text-sm" role="alert"></div>
+    </div>
+
+    <script>
+        // IMPORTANTE: Esta es la URL completa de despliegue de tu Web App de Google Apps Script.
+        const FULL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMapJvU3t9B7c0sfZIQRJbjPZpqjVVQCF9gsJrQd4evSVDCeNnPKlRfdkPLoxkZE8JyA/exec'; 
+        const SCRIPT_URL_PLACEHOLDER = 'URL_DE_TU_GOOGLE_APPS_SCRIPT_WEB_APP'; // Usado para la comprobación inicial
+
+        const form = document.getElementById('inventoryForm');
+        const tipoIngresoRadio = document.getElementById('tipoIngreso');
+        const tipoSalidaRadio = document.getElementById('tipoSalida');
+        const camposSalidaDiv = document.getElementById('camposSalida');
+        const precioVentaInput = document.getElementById('precioVenta');
+        const descripcionVentaInput = document.getElementById('descripcionVenta');
+        const messageDiv = document.getElementById('message');
+        const loader = document.getElementById('loader');
+        const productoSelect = document.getElementById('producto');
+        const stockActualSpan = document.getElementById('stockActual');
+        const refreshStockBtn = document.getElementById('refreshStockBtn');
+
+        function toggleCamposSalida() {
+            if (tipoSalidaRadio.checked) {
+                camposSalidaDiv.classList.remove('hidden');
+                precioVentaInput.required = true;
+            } else {
+                camposSalidaDiv.classList.add('hidden');
+                precioVentaInput.required = false;
+                precioVentaInput.value = '';
+                descripcionVentaInput.value = '';
+            }
+        }
+
+        tipoIngresoRadio.addEventListener('change', toggleCamposSalida);
+        tipoSalidaRadio.addEventListener('change', toggleCamposSalida);
+        
+        async function fetchStock(productName) {
+            if (!productName) {
+                stockActualSpan.textContent = 'N/A';
+                return;
+            }
+            
+            if (FULL_SCRIPT_URL === SCRIPT_URL_PLACEHOLDER || FULL_SCRIPT_URL === '' || !FULL_SCRIPT_URL.startsWith('https://script.google.com/')) { 
+                 stockActualSpan.textContent = 'Configura FULL_SCRIPT_URL';
+                 showMessage('Error: Debes configurar la URL de despliegue completa del Google Apps Script en la variable FULL_SCRIPT_URL del código HTML.', 'error');
+                 return;
+            }
+
+            stockActualSpan.textContent = 'Cargando...';
+            refreshStockBtn.disabled = true;
+            
+            const baseUrlForGet = FULL_SCRIPT_URL.endsWith('/') ? FULL_SCRIPT_URL.slice(0, -1) : FULL_SCRIPT_URL;
+            const fetchUrl = `${baseUrlForGet}?action=getStock&producto=${encodeURIComponent(productName)}`;
+
+            try {
+                const response = await fetch(fetchUrl, { mode: 'cors' }); 
+                if (!response.ok) {
+                    let errorBody = `Respuesta no OK (${response.status}).`;
+                    try {
+                        const errorData = await response.json();
+                        if (errorData && errorData.error) {
+                           errorBody += ` Detalle: ${errorData.error}`;
+                        } else {
+                           const textError = await response.text();
+                           errorBody += ` Contenido: ${textError.substring(0, 200)}`;
+                        }
+                    } catch(e) { 
+                        try {
+                            const textError = await response.text();
+                            errorBody += ` Contenido: ${textError.substring(0,200)}`;
+                        } catch (textE) {
+                            // No hacer nada
+                        }
+                    }
+                    throw new Error(`Error HTTP: ${response.status}. ${errorBody}`);
+                }
+                const data = await response.json();
+                if (data.success) {
+                    stockActualSpan.textContent = data.stock !== undefined ? data.stock : 'No encontrado';
+                } else {
+                    stockActualSpan.textContent = 'Error';
+                    console.error('Error al obtener stock:', data.error);
+                    showMessage(`Error al obtener stock: ${data.error || 'Error desconocido del servidor.'}`, 'error');
+                }
+            } catch (error) {
+                stockActualSpan.textContent = 'Error de red';
+                console.error('Fetch error:', error);
+                let detailedErrorMessage = `Error de conexión al obtener stock: ${error.message}.`;
+                if (error.message.toLowerCase().includes('failed to fetch')) {
+                    detailedErrorMessage += " Esto puede deberse a problemas de red, configuración de CORS, o permisos del script de Google. Si usas una URL de Google Workspace (ej: /a/macros/dominio.com/... o /macros/s/...), asegúrate de que el script tenga permisos de acceso para 'Cualquier usuario' o 'Cualquier usuario, incluso anónimo'. Revisa la consola del navegador (F12) y la pestaña 'Network' para más detalles.";
+                }
+                showMessage(detailedErrorMessage, 'error');
+            } finally {
+                refreshStockBtn.disabled = false;
+            }
+        }
+
+        productoSelect.addEventListener('change', (event) => {
+            fetchStock(event.target.value);
+        });
+        
+        refreshStockBtn.addEventListener('click', () => {
+            const selectedProduct = productoSelect.value;
+            if (selectedProduct) {
+                fetchStock(selectedProduct);
+            } else {
+                showMessage('Por favor, selecciona un producto primero.', 'error');
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (FULL_SCRIPT_URL === SCRIPT_URL_PLACEHOLDER || FULL_SCRIPT_URL === '' || !FULL_SCRIPT_URL.startsWith('https://script.google.com/')) {
+                showMessage('Error: Debes configurar la URL de despliegue completa del Google Apps Script en la variable FULL_SCRIPT_URL del código HTML.', 'error');
+                return;
+            }
+
+            loader.style.display = 'block';
+            messageDiv.textContent = '';
+            messageDiv.className = 'mt-6 p-4 rounded-lg text-center text-sm'; 
+
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            if (parseInt(data.cantidad) <= 0) {
+                showMessage('La cantidad debe ser un número positivo.', 'error');
+                loader.style.display = 'none';
+                return;
+            }
+
+            if (data.tipoMovimiento === 'Salida' && (data.precioVenta === '' || parseFloat(data.precioVenta) < 0)) {
+                showMessage('El precio de venta es requerido para las salidas y no puede ser negativo.', 'error');
+                loader.style.display = 'none';
+                return;
+            }
+            
+            if (data.tipoMovimiento === 'Ingreso') {
+                data.precioVenta = ''; 
+                data.descripcionVenta = ''; 
+            }
+
+            const postUrl = FULL_SCRIPT_URL;
+
+            try {
+                const response = await fetch(postUrl, {
+                    method: 'POST',
+                    mode: 'cors', 
+                    cache: 'no-cache',
+                    redirect: 'follow', 
+                    headers: {
+                        'Content-Type': 'text/plain', 
+                    },
+                    body: JSON.stringify(data) 
+                });
+
+                const resultText = await response.text(); 
+                let result;
+                try {
+                    result = JSON.parse(resultText); 
+                } catch (parseError) {
+                    console.error("Error al parsear respuesta JSON:", parseError, "Respuesta recibida:", resultText);
+                    showMessage(`Error de formato en la respuesta del servidor. Respuesta: ${resultText.substring(0,200)}...`, 'error');
+                    loader.style.display = 'none';
+                    return;
+                }
+
+                if (result.success) {
+                    showMessage('¡Movimiento registrado exitosamente!', 'success');
+                    form.reset(); 
+                    toggleCamposSalida(); 
+                    stockActualSpan.textContent = 'N/A'; 
+                    if (data.producto) { 
+                        fetchStock(data.producto);
+                    }
+                } else {
+                    let errorMessage = 'Error al registrar el movimiento.';
+                    if (result.error === 'STOCK_INSUFICIENTE') {
+                        errorMessage = `Error: Stock insuficiente para el producto '${data.producto}'. Stock actual: ${result.currentStock}.`;
+                    } else if (result.error) {
+                        errorMessage += ` Detalle: ${result.error}`;
+                    }
+                    showMessage(errorMessage, 'error');
+                }
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                let detailedErrorMessage = `Error de conexión al enviar datos: ${error.message}.`;
+                 if (error.message.toLowerCase().includes('failed to fetch')) {
+                    detailedErrorMessage += " Esto puede deberse a problemas de red, configuración de CORS, o permisos del script de Google. Si usas una URL de Google Workspace (ej: /a/macros/dominio.com/... o /macros/s/...), asegúrate de que el script tenga permisos de acceso para 'Cualquier usuario' o 'Cualquier usuario, incluso anónimo'. Revisa la consola del navegador (F12) y la pestaña 'Network' para más detalles.";
+                }
+                showMessage(detailedErrorMessage, 'error');
+            } finally {
+                loader.style.display = 'none';
+            }
+        });
+
+        function showMessage(msg, type = 'info') {
+            messageDiv.textContent = msg;
+            // Colores más formales para los mensajes
+            if (type === 'success') {
+                messageDiv.className = 'mt-6 p-4 rounded-lg text-center text-sm bg-green-100 text-green-800';
+            } else if (type === 'error') {
+                messageDiv.className = 'mt-6 p-4 rounded-lg text-center text-sm bg-red-100 text-red-800';
+            } else { // info
+                messageDiv.className = 'mt-6 p-4 rounded-lg text-center text-sm bg-sky-100 text-sky-800';
+            }
+        }
+        
+        toggleCamposSalida();
+    </script>
+</body>
+</html>
