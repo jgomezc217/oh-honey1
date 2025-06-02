@@ -1,330 +1,217 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Inventario - Miel Picante</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
+// Google Apps Script Code (inventory.gs)
+
+// ID de la hoja de cálculo donde se almacenarán los datos.
+const SPREADSHEET_ID = '1It4QpvBxQAD0g0IPs-2yaAP6oRMJ068574QXLXcHFvE'; 
+const TRANSACTIONS_SHEET_NAME = 'Transacciones';
+const STOCK_SHEET_NAME = 'StockActual';
+
+// Esta función se ejecuta cuando el script recibe una petición GET.
+// Se usa para obtener el stock actual de un producto.
+function doGet(e) {
+  try {
+    if (e && e.parameter && e.parameter.action === 'getStock' && e.parameter.producto) {
+      const productoNombre = e.parameter.producto;
+      const stock = getCurrentStock(productoNombre);
+      return ContentService.createTextOutput(JSON.stringify({ success: true, stock: stock }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    return ContentService.createTextOutput(JSON.stringify({ success: false, error: 'Acción no válida o producto no especificado.' }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    Logger.log('Error en doGet: ' + error.toString() + ' Stack: ' + error.stack);
+    return ContentService.createTextOutput(JSON.stringify({ success: false, error: 'Error interno del servidor al procesar doGet: ' + error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Esta función se ejecuta cuando el script recibe una petición POST (desde el formulario HTML).
+function doPost(e) {
+  try {
+    if (SPREADSHEET_ID === 'TU_SPREADSHEET_ID' || SPREADSHEET_ID === '') { 
+      Logger.log('Error: SPREADSHEET_ID no ha sido configurado correctamente en el script.');
+      return ContentService.createTextOutput(JSON.stringify({ success: false, error: 'SPREADSHEET_ID no configurado en el script.' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const data = JSON.parse(e.postData.contents);
+
+    if (!data.producto || !data.tipoMovimiento || !data.cantidad) {
+      Logger.log('Error: Faltan datos en la petición: ' + JSON.stringify(data));
+      return ContentService.createTextOutput(JSON.stringify({ success: false, error: 'Faltan datos requeridos.' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    const cantidad = parseInt(data.cantidad, 10);
+    if (isNaN(cantidad) || cantidad <= 0) {
+        Logger.log('Error: Cantidad inválida: ' + data.cantidad);
+        return ContentService.createTextOutput(JSON.stringify({ success: false, error: 'La cantidad debe ser un número positivo.' }))
+            .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const transactionsSheet = ss.getSheetByName(TRANSACTIONS_SHEET_NAME);
+    const stockSheet = ss.getSheetByName(STOCK_SHEET_NAME);
+
+    if (!transactionsSheet) {
+        Logger.log('Error: No se encontró la hoja "' + TRANSACTIONS_SHEET_NAME + '" en el Spreadsheet ID: ' + SPREADSHEET_ID);
+        return ContentService.createTextOutput(JSON.stringify({ success: false, error: 'Hoja de Transacciones no encontrada.' }))
+            .setMimeType(ContentService.MimeType.JSON);
+    }
+    if (!stockSheet) {
+        Logger.log('Error: No se encontró la hoja "' + STOCK_SHEET_NAME + '" en el Spreadsheet ID: ' + SPREADSHEET_ID);
+        return ContentService.createTextOutput(JSON.stringify({ success: false, error: 'Hoja de StockActual no encontrada.' }))
+            .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const stockData = stockSheet.getDataRange().getValues();
+    let productRowIndex = -1;
+    let currentStock = 0; // Initialize currentStock
+
+    for (let i = 1; i < stockData.length; i++) { // Start from 1 to skip header row
+      if (stockData[i][0] === data.producto) {
+        productRowIndex = i + 1; // Sheet rows are 1-indexed
+        currentStock = parseInt(stockData[i][1], 10);
+        if (isNaN(currentStock)) { 
+            currentStock = 0; 
+            Logger.log('Advertencia: Stock para "' + data.producto + '" no era un número. Se asumió 0.');
         }
-        .loader {
-            border: 4px solid #f3f3f3; /* Light grey */
-            border-top: 4px solid #3b82f6; /* Blue-500 */
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-            display: none; /* Hidden by default */
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        /* Custom scrollbar for product list if it gets too long */
-        select[multiple], select[size] {
-            scrollbar-width: thin;
-            scrollbar-color: #3b82f6 #e2e8f0; /* blue-500 slate-200 */
-        }
-        select[multiple]::-webkit-scrollbar, select[size]::-webkit-scrollbar {
-            width: 8px;
-        }
-        select[multiple]::-webkit-scrollbar-track, select[size]::-webkit-scrollbar-track {
-            background: #e2e8f0; /* slate-200 */
-            border-radius: 10px;
-        }
-        select[multiple]::-webkit-scrollbar-thumb, select[size]::-webkit-scrollbar-thumb {
-            background-color: #3b82f6; /* blue-500 */
-            border-radius: 10px;
-            border: 2px solid #e2e8f0; /* slate-200 */
-        }
-    </style>
-</head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white shadow-2xl rounded-xl p-6 md:p-10 w-full max-w-2xl">
-        <header class="mb-8 text-center">
-            <h1 class="text-3xl md:text-4xl font-bold text-slate-700">🍯 Control de Inventario</h1>
-            <p class="text-slate-600 mt-2">Gestiona las entradas y salidas de tus mieles picantes.</p>
-        </header>
+        break;
+      }
+    }
 
-        <form id="inventoryForm" class="space-y-6">
-            <div>
-                <label for="producto" class="block text-sm font-medium text-slate-700 mb-1">Producto:</label>
-                <select id="producto" name="producto" required
-                        class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out bg-white">
-                    <option value="" disabled selected>Selecciona un producto...</option>
-                    <option value="Miel Picante Nivel 1 botella 350 ml">Miel Picante Nivel 1 botella 350 ml</option>
-                    <option value="Miel Picante Nivel 2 botella 350 ml">Miel Picante Nivel 2 botella 350 ml</option>
-                    <option value="Miel Picante Nivel 3 botella 350 ml">Miel Picante Nivel 3 botella 350 ml</option>
-                    <option value="Miel Picante Nivel 1 sachet">Miel Picante Nivel 1 sachet</option>
-                    <option value="Miel Picante Nivel 2 sachet">Miel Picante Nivel 2 sachet</option>
-                    <option value="Miel Picante Nivel 3 sachet">Miel Picante Nivel 3 sachet</option>
-                    <option value="Miel Picante Nivel 1 galon">Miel Picante Nivel 1 galón</option>
-                    <option value="Miel Picante Nivel 2 galon">Miel Picante Nivel 2 galón</option>
-                    <option value="Miel Picante Nivel 3 galon">Miel Picante Nivel 3 galón</option>
-                </select>
-                <div class="mt-2 text-sm text-slate-600">
-                    Stock Actual: <span id="stockActual" class="font-semibold">N/A</span>
-                    <button type="button" id="refreshStockBtn" class="ml-2 text-xs px-2 py-1 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors">Actualizar Stock</button>
-                </div>
-            </div>
+    if (productRowIndex === -1) {
+      Logger.log('Error: Producto no encontrado en la hoja StockActual: ' + data.producto);
+      return ContentService.createTextOutput(JSON.stringify({ success: false, error: 'Producto no encontrado en la hoja de stock. Asegúrate de que esté listado en la hoja "StockActual".' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
 
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Tipo de Movimiento:</label>
-                <div class="flex items-center space-x-4">
-                    <label class="flex items-center">
-                        <input type="radio" id="tipoIngreso" name="tipoMovimiento" value="Ingreso" required checked
-                               class="h-4 w-4 text-sky-600 border-slate-300 focus:ring-sky-500">
-                        <span class="ml-2 text-slate-700">Ingreso de Mercadería</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="radio" id="tipoSalida" name="tipoMovimiento" value="Salida" required
-                               class="h-4 w-4 text-sky-600 border-slate-300 focus:ring-sky-500">
-                        <span class="ml-2 text-slate-700">Salida de Mercadería</span>
-                    </label>
-                </div>
-            </div>
+    let newStock = currentStock;
 
-            <div>
-                <label for="cantidad" class="block text-sm font-medium text-slate-700 mb-1">Cantidad:</label>
-                <input type="number" id="cantidad" name="cantidad" required min="1"
-                       class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out bg-white"
-                       placeholder="Ej: 10">
-            </div>
+    if (data.tipoMovimiento === 'Salida') {
+      if (currentStock < cantidad) {
+        Logger.log('Error: Stock insuficiente para ' + data.producto + '. Stock actual: ' + currentStock + ', Salida solicitada: ' + cantidad);
+        // Return error BEFORE any sheet modification for this transaction
+        return ContentService.createTextOutput(JSON.stringify({ success: false, error: 'STOCK_INSUFICIENTE', currentStock: currentStock, productName: data.producto }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+      newStock -= cantidad;
+    } else if (data.tipoMovimiento === 'Ingreso') {
+      newStock += cantidad;
+    }
 
-            <div id="camposSalida" class="space-y-6 hidden">
-                <div>
-                    <label for="precioVenta" class="block text-sm font-medium text-slate-700 mb-1">Precio de Venta (Total por esta salida, USD):</label>
-                    <input type="number" id="precioVenta" name="precioVenta" step="0.01" min="0"
-                           class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out bg-white"
-                           placeholder="Ej: 25.50">
-                </div>
-                <div>
-                    <label for="descripcionVenta" class="block text-sm font-medium text-slate-700 mb-1">Descripción de la Venta/Salida:</label>
-                    <textarea id="descripcionVenta" name="descripcionVenta" rows="3"
-                              class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out bg-white"
-                              placeholder="Ej: Venta a cliente minorista, ajuste de inventario, etc."></textarea>
-                </div>
-            </div>
+    // If we've reached here, the operation is valid (either Ingreso or Salida with enough stock)
+    const timestamp = new Date();
+    transactionsSheet.appendRow([
+      timestamp,
+      data.producto,
+      data.tipoMovimiento,
+      cantidad,
+      data.tipoMovimiento === 'Salida' ? data.precioVenta || 0 : '',
+      data.tipoMovimiento === 'Salida' ? data.descripcionVenta || '' : ''
+    ]);
 
-            <div class="flex items-center justify-end space-x-3 pt-4">
-                <div id="loader" class="loader"></div>
-                <button type="submit"
-                        class="bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 transition duration-150 ease-in-out">
-                    Registrar Movimiento
-                </button>
-            </div>
-        </form>
-        <div id="message" class="mt-6 p-4 rounded-lg text-center text-sm" role="alert"></div>
-    </div>
+    stockSheet.getRange(productRowIndex, 2).setValue(newStock); 
 
-    <script>
-        // IMPORTANTE: Esta es la URL completa de despliegue de tu Web App de Google Apps Script.
-        const FULL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMapJvU3t9B7c0sfZIQRJbjPZpqjVVQCF9gsJrQd4evSVDCeNnPKlRfdkPLoxkZE8JyA/exec'; 
-        const SCRIPT_URL_PLACEHOLDER = 'URL_DE_TU_GOOGLE_APPS_SCRIPT_WEB_APP'; // Usado para la comprobación inicial
+    SpreadsheetApp.flush(); 
 
-        const form = document.getElementById('inventoryForm');
-        const tipoIngresoRadio = document.getElementById('tipoIngreso');
-        const tipoSalidaRadio = document.getElementById('tipoSalida');
-        const camposSalidaDiv = document.getElementById('camposSalida');
-        const precioVentaInput = document.getElementById('precioVenta');
-        const descripcionVentaInput = document.getElementById('descripcionVenta');
-        const messageDiv = document.getElementById('message');
-        const loader = document.getElementById('loader');
-        const productoSelect = document.getElementById('producto');
-        const stockActualSpan = document.getElementById('stockActual');
-        const refreshStockBtn = document.getElementById('refreshStockBtn');
+    return ContentService.createTextOutput(JSON.stringify({ success: true, message: 'Movimiento registrado.' }))
+      .setMimeType(ContentService.MimeType.JSON);
 
-        function toggleCamposSalida() {
-            if (tipoSalidaRadio.checked) {
-                camposSalidaDiv.classList.remove('hidden');
-                precioVentaInput.required = true;
-            } else {
-                camposSalidaDiv.classList.add('hidden');
-                precioVentaInput.required = false;
-                precioVentaInput.value = '';
-                descripcionVentaInput.value = '';
-            }
-        }
+  } catch (error) {
+    Logger.log('Error en doPost: ' + error.toString() + ' Stack: ' + error.stack);
+    return ContentService.createTextOutput(JSON.stringify({ success: false, error: 'Ocurrió un error en el servidor: ' + error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
 
-        tipoIngresoRadio.addEventListener('change', toggleCamposSalida);
-        tipoSalidaRadio.addEventListener('change', toggleCamposSalida);
-        
-        async function fetchStock(productName) {
-            if (!productName) {
-                stockActualSpan.textContent = 'N/A';
-                return;
-            }
-            
-            if (FULL_SCRIPT_URL === SCRIPT_URL_PLACEHOLDER || FULL_SCRIPT_URL === '' || !FULL_SCRIPT_URL.startsWith('https://script.google.com/')) { 
-                 stockActualSpan.textContent = 'Configura FULL_SCRIPT_URL';
-                 showMessage('Error: Debes configurar la URL de despliegue completa del Google Apps Script en la variable FULL_SCRIPT_URL del código HTML.', 'error');
-                 return;
-            }
+function getCurrentStock(productName) {
+  if (SPREADSHEET_ID === 'TU_SPREADSHEET_ID' || SPREADSHEET_ID === '') {
+    Logger.log('Error en getCurrentStock: SPREADSHEET_ID no ha sido configurado.');
+    return 'ID Hoja No Configurado'; 
+  }
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const stockSheet = ss.getSheetByName(STOCK_SHEET_NAME);
+     if (!stockSheet) {
+        Logger.log('Error en getCurrentStock: No se encontró la hoja "' + STOCK_SHEET_NAME + '"');
+        return 'Hoja Stock No Encontrada';
+    }
+    const stockData = stockSheet.getDataRange().getValues();
+    for (let i = 1; i < stockData.length; i++) {
+      if (stockData[i][0] === productName) {
+        let stockValue = stockData[i][1];
+        return !isNaN(parseFloat(stockValue)) && isFinite(stockValue) ? parseFloat(stockValue) : 0;
+      }
+    }
+    return 0; 
+  } catch (error) {
+    Logger.log('Error al obtener stock para ' + productName + ': ' + error.toString());
+    return 'Error'; 
+  }
+}
 
-            stockActualSpan.textContent = 'Cargando...';
-            refreshStockBtn.disabled = true;
-            
-            const baseUrlForGet = FULL_SCRIPT_URL.endsWith('/') ? FULL_SCRIPT_URL.slice(0, -1) : FULL_SCRIPT_URL;
-            const fetchUrl = `${baseUrlForGet}?action=getStock&producto=${encodeURIComponent(productName)}`;
+function setup() {
+  if (SPREADSHEET_ID === 'TU_SPREADSHEET_ID' || SPREADSHEET_ID === '') {
+    SpreadsheetApp.getUi().alert('Configuración Necesaria', 'Por favor, edita el script y reemplaza "TU_SPREADSHEET_ID" (o configúralo si está vacío) con el ID real de tu Google Sheet antes de ejecutar setup.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  
+  let transactionsSheet = ss.getSheetByName(TRANSACTIONS_SHEET_NAME);
+  if (!transactionsSheet) {
+    transactionsSheet = ss.insertSheet(TRANSACTIONS_SHEET_NAME);
+    transactionsSheet.appendRow(['Timestamp', 'Producto', 'Tipo Movimiento', 'Cantidad', 'Precio Venta (Total)', 'Descripción Venta']);
+    transactionsSheet.getRange("A:F").applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY, true, false);
+    transactionsSheet.setFrozenRows(1);
+    transactionsSheet.getRange("A1:F1").setFontWeight("bold"); 
+    transactionsSheet.setColumnWidth(1, 150); 
+    transactionsSheet.setColumnWidth(2, 250); 
+    transactionsSheet.setColumnWidth(3, 150); 
+    transactionsSheet.setColumnWidth(5, 150); 
+    transactionsSheet.setColumnWidth(6, 300); 
+     Logger.log('Hoja "' + TRANSACTIONS_SHEET_NAME + '" creada y configurada.');
+  } else {
+     Logger.log('Hoja "' + TRANSACTIONS_SHEET_NAME + '" ya existe.');
+  }
 
-            try {
-                const response = await fetch(fetchUrl, { mode: 'cors' }); 
-                if (!response.ok) {
-                    let errorBody = `Respuesta no OK (${response.status}).`;
-                    try {
-                        const errorData = await response.json();
-                        if (errorData && errorData.error) {
-                           errorBody += ` Detalle: ${errorData.error}`;
-                        } else {
-                           const textError = await response.text();
-                           errorBody += ` Contenido: ${textError.substring(0, 200)}`;
-                        }
-                    } catch(e) { 
-                        try {
-                            const textError = await response.text();
-                            errorBody += ` Contenido: ${textError.substring(0,200)}`;
-                        } catch (textE) {
-                            // No hacer nada
-                        }
-                    }
-                    throw new Error(`Error HTTP: ${response.status}. ${errorBody}`);
-                }
-                const data = await response.json();
-                if (data.success) {
-                    stockActualSpan.textContent = data.stock !== undefined ? data.stock : 'No encontrado';
-                } else {
-                    stockActualSpan.textContent = 'Error';
-                    console.error('Error al obtener stock:', data.error);
-                    showMessage(`Error al obtener stock: ${data.error || 'Error desconocido del servidor.'}`, 'error');
-                }
-            } catch (error) {
-                stockActualSpan.textContent = 'Error de red';
-                console.error('Fetch error:', error);
-                let detailedErrorMessage = `Error de conexión al obtener stock: ${error.message}.`;
-                if (error.message.toLowerCase().includes('failed to fetch')) {
-                    detailedErrorMessage += " Esto puede deberse a problemas de red, configuración de CORS, o permisos del script de Google. Si usas una URL de Google Workspace (ej: /a/macros/dominio.com/... o /macros/s/...), asegúrate de que el script tenga permisos de acceso para 'Cualquier usuario' o 'Cualquier usuario, incluso anónimo'. Revisa la consola del navegador (F12) y la pestaña 'Network' para más detalles.";
-                }
-                showMessage(detailedErrorMessage, 'error');
-            } finally {
-                refreshStockBtn.disabled = false;
-            }
-        }
+  let stockSheet = ss.getSheetByName(STOCK_SHEET_NAME);
+  if (!stockSheet) {
+    stockSheet = ss.insertSheet(STOCK_SHEET_NAME);
+    stockSheet.appendRow(['Producto', 'Stock']);
+    const productos = [
+      "Miel Picante Nivel 1 botella 350 ml", "Miel Picante Nivel 2 botella 350 ml", "Miel Picante Nivel 3 botella 350 ml",
+      "Miel Picante Nivel 1 sachet", "Miel Picante Nivel 2 sachet", "Miel Picante Nivel 3 sachet",
+      "Miel Picante Nivel 1 galon", "Miel Picante Nivel 2 galon", "Miel Picante Nivel 3 galon"
+    ];
+    productos.forEach(p => stockSheet.appendRow([p, 0])); 
+    stockSheet.getRange("A:B").applyRowBanding(SpreadsheetApp.BandingTheme.CYAN, true, false);
+    stockSheet.setFrozenRows(1);
+    stockSheet.getRange("A1:B1").setFontWeight("bold"); 
+    stockSheet.setColumnWidth(1, 250); 
+    stockSheet.setColumnWidth(2, 100); 
+    Logger.log('Hoja "' + STOCK_SHEET_NAME + '" creada, configurada y poblada con productos.');
+  } else {
+    const existingProductsData = stockSheet.getRange(2, 1, stockSheet.getLastRow() > 1 ? stockSheet.getLastRow() -1 : 1 , 1).getValues(); // Check if sheet has more than header
+    const existingProductsList = existingProductsData.map(row => row[0]);
+    const productosBase = [
+      "Miel Picante Nivel 1 botella 350 ml", "Miel Picante Nivel 2 botella 350 ml", "Miel Picante Nivel 3 botella 350 ml",
+      "Miel Picante Nivel 1 sachet", "Miel Picante Nivel 2 sachet", "Miel Picante Nivel 3 sachet",
+      "Miel Picante Nivel 1 galon", "Miel Picante Nivel 2 galon", "Miel Picante Nivel 3 galon"
+    ];
+    let productsAdded = 0;
+    productosBase.forEach(p => {
+      if (!existingProductsList.includes(p)) {
+        stockSheet.appendRow([p, 0]);
+        productsAdded++;
+      }
+    });
+    if (productsAdded > 0) {
+      Logger.log(productsAdded + ' producto(s) nuevo(s) agregado(s) a la hoja "' + STOCK_SHEET_NAME + '".');
+    } else {
+      Logger.log('Hoja "' + STOCK_SHEET_NAME + '" ya existe y todos los productos base están listados.');
+    }
+  }
+  SpreadsheetApp.getUi().alert('Configuración Completada', 'Las hojas necesarias han sido verificadas/creadas y los productos actualizados. Asegúrate de que "SPREADSHEET_ID" esté correctamente configurado en el script.', SpreadsheetApp.getUi().ButtonSet.OK);
+}
 
-        productoSelect.addEventListener('change', (event) => {
-            fetchStock(event.target.value);
-        });
-        
-        refreshStockBtn.addEventListener('click', () => {
-            const selectedProduct = productoSelect.value;
-            if (selectedProduct) {
-                fetchStock(selectedProduct);
-            } else {
-                showMessage('Por favor, selecciona un producto primero.', 'error');
-            }
-        });
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            if (FULL_SCRIPT_URL === SCRIPT_URL_PLACEHOLDER || FULL_SCRIPT_URL === '' || !FULL_SCRIPT_URL.startsWith('https://script.google.com/')) {
-                showMessage('Error: Debes configurar la URL de despliegue completa del Google Apps Script en la variable FULL_SCRIPT_URL del código HTML.', 'error');
-                return;
-            }
-
-            loader.style.display = 'block';
-            messageDiv.textContent = '';
-            messageDiv.className = 'mt-6 p-4 rounded-lg text-center text-sm'; 
-
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-
-            if (parseInt(data.cantidad) <= 0) {
-                showMessage('La cantidad debe ser un número positivo.', 'error');
-                loader.style.display = 'none';
-                return;
-            }
-
-            if (data.tipoMovimiento === 'Salida' && (data.precioVenta === '' || parseFloat(data.precioVenta) < 0)) {
-                showMessage('El precio de venta es requerido para las salidas y no puede ser negativo.', 'error');
-                loader.style.display = 'none';
-                return;
-            }
-            
-            if (data.tipoMovimiento === 'Ingreso') {
-                data.precioVenta = ''; 
-                data.descripcionVenta = ''; 
-            }
-
-            const postUrl = FULL_SCRIPT_URL;
-
-            try {
-                const response = await fetch(postUrl, {
-                    method: 'POST',
-                    mode: 'cors', 
-                    cache: 'no-cache',
-                    redirect: 'follow', 
-                    headers: {
-                        'Content-Type': 'text/plain', 
-                    },
-                    body: JSON.stringify(data) 
-                });
-
-                const resultText = await response.text(); 
-                let result;
-                try {
-                    result = JSON.parse(resultText); 
-                } catch (parseError) {
-                    console.error("Error al parsear respuesta JSON:", parseError, "Respuesta recibida:", resultText);
-                    showMessage(`Error de formato en la respuesta del servidor. Respuesta: ${resultText.substring(0,200)}...`, 'error');
-                    loader.style.display = 'none';
-                    return;
-                }
-
-                if (result.success) {
-                    showMessage('¡Movimiento registrado exitosamente!', 'success');
-                    form.reset(); 
-                    toggleCamposSalida(); 
-                    stockActualSpan.textContent = 'N/A'; 
-                    if (data.producto) { 
-                        fetchStock(data.producto);
-                    }
-                } else {
-                    let errorMessage = 'Error al registrar el movimiento.';
-                    if (result.error === 'STOCK_INSUFICIENTE') {
-                        errorMessage = `Error: Stock insuficiente para el producto '${data.producto}'. Stock actual: ${result.currentStock}.`;
-                    } else if (result.error) {
-                        errorMessage += ` Detalle: ${result.error}`;
-                    }
-                    showMessage(errorMessage, 'error');
-                }
-            } catch (error) {
-                console.error('Error submitting form:', error);
-                let detailedErrorMessage = `Error de conexión al enviar datos: ${error.message}.`;
-                 if (error.message.toLowerCase().includes('failed to fetch')) {
-                    detailedErrorMessage += " Esto puede deberse a problemas de red, configuración de CORS, o permisos del script de Google. Si usas una URL de Google Workspace (ej: /a/macros/dominio.com/... o /macros/s/...), asegúrate de que el script tenga permisos de acceso para 'Cualquier usuario' o 'Cualquier usuario, incluso anónimo'. Revisa la consola del navegador (F12) y la pestaña 'Network' para más detalles.";
-                }
-                showMessage(detailedErrorMessage, 'error');
-            } finally {
-                loader.style.display = 'none';
-            }
-        });
-
-        function showMessage(msg, type = 'info') {
-            messageDiv.textContent = msg;
-            // Colores más formales para los mensajes
-            if (type === 'success') {
-                messageDiv.className = 'mt-6 p-4 rounded-lg text-center text-sm bg-green-100 text-green-800';
-            } else if (type === 'error') {
-                messageDiv.className = 'mt-6 p-4 rounded-lg text-center text-sm bg-red-100 text-red-800';
-            } else { // info
-                messageDiv.className = 'mt-6 p-4 rounded-lg text-center text-sm bg-sky-100 text-sky-800';
-            }
-        }
-        
-        toggleCamposSalida();
-    </script>
-</body>
-</html>
