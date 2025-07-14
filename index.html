@@ -76,16 +76,27 @@
                     <label class="block text-sm font-medium text-slate-700 mb-1">Tipo de Movimiento:</label>
                     <div class="flex items-center space-x-4">
                         <label class="flex items-center"><input type="radio" name="tipoMovimiento" value="Ingreso" required checked class="h-4 w-4 text-sky-600 border-slate-300 focus:ring-sky-500"><span class="ml-2 text-slate-700">Ingreso</span></label>
-                        <label class="flex items-center"><input type="radio" name="tipoMovimiento" value="Salida" required class="h-4 w-4 text-sky-600 border-slate-300 focus:ring-sky-500"><span class="ml-2 text-slate-700">Salida</span></label>
+                        <label class="flex items-center"><input type="radio" name="tipoMovimiento" value="Venta" required class="h-4 w-4 text-sky-600 border-slate-300 focus:ring-sky-500"><span class="ml-2 text-slate-700">Venta</span></label>
                     </div>
                 </div>
                 <div>
                     <label for="cantidad" class="block text-sm font-medium text-slate-700 mb-1">Cantidad:</label>
                     <input type="number" id="cantidad" name="cantidad" required min="1" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="Ej: 10">
                 </div>
-                <div id="camposSalida" class="space-y-6 hidden">
-                    <div><label for="precioVenta" class="block text-sm font-medium text-slate-700 mb-1">Precio de Venta (Total):</label><input type="number" id="precioVenta" name="precioVenta" step="0.01" min="0" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="Ej: 25.50"></div>
-                    <div><label for="descripcionVenta" class="block text-sm font-medium text-slate-700 mb-1">Descripción de la Venta/Salida:</label><textarea id="descripcionVenta" name="descripcionVenta" rows="3" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="Ej: Venta a cliente minorista"></textarea></div>
+                <!-- Campos específicos para Venta -->
+                <div id="camposVenta" class="space-y-6 hidden">
+                    <div>
+                        <label for="numeroFactura" class="block text-sm font-medium text-slate-700 mb-1">Número de Factura:</label>
+                        <input type="text" id="numeroFactura" name="numeroFactura" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="Ej: 001-001-0001234">
+                    </div>
+                    <div>
+                        <label for="precioVentaTotal" class="block text-sm font-medium text-slate-700 mb-1">Precio de Venta Total (IVA Incluido):</label>
+                        <input type="number" id="precioVentaTotal" name="precioVentaTotal" step="0.01" min="0" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="Ej: 28.25">
+                    </div>
+                    <div>
+                        <label for="descripcionVenta" class="block text-sm font-medium text-slate-700 mb-1">Descripción de la Venta:</label>
+                        <textarea id="descripcionVenta" name="descripcionVenta" rows="3" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="Ej: Venta a cliente minorista"></textarea>
+                    </div>
                 </div>
                 <div class="flex items-center justify-end pt-4"><button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2">Registrar Movimiento</button></div>
             </form>
@@ -169,26 +180,29 @@
         tabExpenseBtn.addEventListener('click', () => switchTab('expense'));
 
         // Lógica del formulario de inventario
-        const tipoSalidaRadio = document.querySelector('input[name="tipoMovimiento"][value="Salida"]');
+        const tipoVentaRadio = document.querySelector('input[name="tipoMovimiento"][value="Venta"]');
         const tipoIngresoRadio = document.querySelector('input[name="tipoMovimiento"][value="Ingreso"]');
-        const camposSalidaDiv = document.getElementById('camposSalida');
-        const precioVentaInput = document.getElementById('precioVenta');
+        const camposVentaDiv = document.getElementById('camposVenta');
+        const numeroFacturaInput = document.getElementById('numeroFactura');
+        const precioVentaTotalInput = document.getElementById('precioVentaTotal');
         const productoSelect = document.getElementById('producto');
         const stockActualSpan = document.getElementById('stockActual');
         const refreshStockBtn = document.getElementById('refreshStockBtn');
 
-        function toggleCamposSalida() {
-            if (tipoSalidaRadio.checked) {
-                camposSalidaDiv.classList.remove('hidden');
-                precioVentaInput.required = true;
+        function toggleCamposVenta() {
+            if (tipoVentaRadio.checked) {
+                camposVentaDiv.classList.remove('hidden');
+                numeroFacturaInput.required = true;
+                precioVentaTotalInput.required = true;
             } else {
-                camposSalidaDiv.classList.add('hidden');
-                precioVentaInput.required = false;
+                camposVentaDiv.classList.add('hidden');
+                numeroFacturaInput.required = false;
+                precioVentaTotalInput.required = false;
             }
         }
 
-        tipoIngresoRadio.addEventListener('change', toggleCamposSalida);
-        tipoSalidaRadio.addEventListener('change', toggleCamposSalida);
+        tipoIngresoRadio.addEventListener('change', toggleCamposVenta);
+        tipoVentaRadio.addEventListener('change', toggleCamposVenta);
         productoSelect.addEventListener('change', (e) => fetchStock(e.target.value));
         refreshStockBtn.addEventListener('click', () => fetchStock(productoSelect.value));
 
@@ -229,7 +243,7 @@
                     showMessage(result.message || '¡Operación registrada exitosamente!', 'success');
                     formElement.reset();
                     if (formElement.id === 'inventoryForm') {
-                        toggleCamposSalida();
+                        toggleCamposVenta();
                         stockActualSpan.textContent = 'N/A';
                         if (data.producto) fetchStock(data.producto);
                     }
@@ -265,7 +279,7 @@
         }
 
         // Inicializar
-        toggleCamposSalida();
+        toggleCamposVenta();
     </script>
 </body>
 </html>
