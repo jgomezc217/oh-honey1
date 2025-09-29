@@ -123,7 +123,6 @@
         </div>
     </div>
     
-    <!-- Plantilla para las opciones de producto (para clonar) -->
     <template id="productOptionsTemplate">
         <option value="" disabled selected>Selecciona un producto...</option>
         <option value="Miel Picante Nivel 1 botella 350 ml">Miel Picante Nivel 1 botella 350 ml</option>
@@ -140,7 +139,6 @@
     <script>
         const FULL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMapJvU3t9B7c0sfZIQRJbjPZpqjVVQCF9gsJrQd4evSVDCeNnPKlRfdkPLoxkZE8JyA/exec';
         
-        // --- Elementos del DOM ---
         const tabInventoryBtn = document.getElementById('tabInventoryBtn');
         const tabExpenseBtn = document.getElementById('tabExpenseBtn');
         const inventoryContent = document.getElementById('inventoryContent');
@@ -157,7 +155,6 @@
         const saleTotalEl = document.getElementById('saleTotal');
         const productOptionsTemplate = document.getElementById('productOptionsTemplate');
         
-        // --- Lógica de Pestañas ---
         tabInventoryBtn.addEventListener('click', () => switchTab('inventory'));
         tabExpenseBtn.addEventListener('click', () => switchTab('expense'));
         function switchTab(activeTab) {
@@ -171,7 +168,6 @@
             }
         }
 
-        // --- Lógica del Formulario de Inventario ---
         movementRadios.forEach(radio => radio.addEventListener('change', toggleInventoryForms));
         function toggleInventoryForms() {
             const selectedValue = document.querySelector('input[name="tipoMovimiento"]:checked').value;
@@ -185,7 +181,6 @@
             }
         }
         
-        // --- Lógica de Venta Múltiple ---
         addProductBtn.addEventListener('click', addProductLine);
         productLinesContainer.addEventListener('click', (e) => {
             if (e.target.classList.contains('remove-product-btn')) {
@@ -197,22 +192,26 @@
         
         function addProductLine() {
             const lineDiv = document.createElement('div');
-            lineDiv.className = 'product-line grid grid-cols-12 gap-2 items-center';
+            lineDiv.className = 'product-line grid grid-cols-12 gap-2 items-center border-t pt-3 first:border-t-0 first:pt-0';
             lineDiv.innerHTML = `
-                <div class="col-span-12 sm:col-span-5">
+                <div class="col-span-12 sm:col-span-4">
                     <label class="sr-only">Producto</label>
                     <select name="producto" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-1 focus:ring-sky-500">${productOptionsTemplate.innerHTML}</select>
                 </div>
-                <div class="col-span-6 sm:col-span-2">
+                <div class="col-span-4 sm:col-span-2">
                      <label class="sr-only">Cantidad</label>
                     <input type="number" name="cantidad" min="1" placeholder="Cant." class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-1 focus:ring-sky-500">
                 </div>
-                <div class="col-span-6 sm:col-span-3">
-                     <label class="sr-only">Precio Total</label>
-                    <input type="number" name="precioVentaTotal" step="0.01" min="0" placeholder="Precio Total" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-1 focus:ring-sky-500">
+                <div class="col-span-8 sm:col-span-3">
+                     <label class="sr-only">Precio</label>
+                    <input type="number" name="precioVenta" step="0.01" min="0" placeholder="Precio" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-1 focus:ring-sky-500">
                 </div>
-                <div class="col-span-12 sm:col-span-2 flex justify-end">
-                    <button type="button" class="remove-product-btn text-red-500 hover:text-red-700 font-bold p-2">✕</button>
+                <div class="col-span-10 sm:col-span-2 flex items-center justify-start sm:justify-center">
+                    <input type="checkbox" name="incluyeIVA" checked class="h-4 w-4 text-sky-600 border-slate-300 rounded focus:ring-sky-500">
+                    <label class="ml-2 text-xs text-slate-600">Incl. IVA</label>
+                </div>
+                <div class="col-span-2 sm:col-span-1 flex justify-end">
+                    <button type="button" class="remove-product-btn text-red-500 hover:text-red-700 font-bold p-2 rounded-full leading-none">✕</button>
                 </div>
             `;
             productLinesContainer.appendChild(lineDiv);
@@ -222,13 +221,14 @@
             const lines = document.querySelectorAll('.product-line');
             let total = 0;
             lines.forEach(line => {
-                const priceInput = line.querySelector('input[name="precioVentaTotal"]');
-                total += parseFloat(priceInput.value) || 0;
+                const priceInput = line.querySelector('input[name="precioVenta"]');
+                const includesIVA = line.querySelector('input[name="incluyeIVA"]').checked;
+                const price = parseFloat(priceInput.value) || 0;
+                total += includesIVA ? price : price * 1.13;
             });
             saleTotalEl.textContent = `$${total.toFixed(2)}`;
         }
 
-        // --- Lógica de Envío de Formularios ---
         async function handleFormSubmit(e) {
             e.preventDefault();
             loader.style.display = 'block';
@@ -245,10 +245,11 @@
                 const productos = Array.from(productLines).map(line => ({
                     producto: line.querySelector('select[name="producto"]').value,
                     cantidad: line.querySelector('input[name="cantidad"]').value,
-                    precioVentaTotal: line.querySelector('input[name="precioVentaTotal"]').value,
+                    precioVenta: line.querySelector('input[name="precioVenta"]').value,
+                    incluyeIVA: line.querySelector('input[name="incluyeIVA"]').checked,
                 }));
                 
-                if (productos.some(p => !p.producto || !p.cantidad || !p.precioVentaTotal)) {
+                if (productos.some(p => !p.producto || !p.cantidad || !p.precioVenta)) {
                    showMessage('Por favor, complete todos los campos para cada producto.', 'error');
                    loader.style.display = 'none';
                    return;
@@ -301,7 +302,6 @@
             else if (type === 'error') messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm bg-red-100 text-red-800';
         }
 
-        // Inicializar
         document.getElementById('productoIngreso').innerHTML = productOptionsTemplate.innerHTML;
         toggleInventoryForms();
     </script>
