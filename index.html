@@ -7,103 +7,82 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3b82f6;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-            display: none;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .tab-button.active {
-            border-bottom-color: #3b82f6; /* blue-600 */
-            color: #1e40af; /* blue-800 */
-            font-weight: 600;
-        }
+        body { font-family: 'Inter', sans-serif; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .tab-button.active { border-bottom-color: #3b82f6; color: #1e40af; font-weight: 600; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white shadow-2xl rounded-xl p-6 md:p-10 w-full max-w-2xl">
+    <div class="bg-white shadow-2xl rounded-xl p-6 md:p-10 w-full max-w-3xl">
         <header class="mb-6 text-center">
             <h1 class="text-3xl md:text-4xl font-bold text-slate-700">🍯 Control Financiero y de Inventario</h1>
             <p class="text-slate-600 mt-2">Gestiona tu inventario y registra tus gastos.</p>
         </header>
 
-        <!-- Pestañas -->
         <div class="border-b border-slate-200 mb-6">
             <nav class="flex -mb-px space-x-6">
-                <button id="tabInventoryBtn" class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700 hover:border-slate-300">
-                    Movimientos de Inventario
-                </button>
-                <button id="tabExpenseBtn" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700 hover:border-slate-300">
-                    Registro de Gastos
-                </button>
+                <button id="tabInventoryBtn" class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700 hover:border-slate-300">Movimientos de Inventario</button>
+                <button id="tabExpenseBtn" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700 hover:border-slate-300">Registro de Gastos</button>
             </nav>
         </div>
 
         <!-- Contenido de Inventario -->
         <div id="inventoryContent">
-            <form id="inventoryForm" class="space-y-6">
+            <form id="inventoryForm">
                 <input type="hidden" name="formType" value="inventory">
-                <div>
-                    <label for="producto" class="block text-sm font-medium text-slate-700 mb-1">Producto:</label>
-                    <select id="producto" name="producto" required class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out bg-white">
-                        <option value="" disabled selected>Selecciona un producto...</option>
-                        <option value="Miel Picante Nivel 1 botella 350 ml">Miel Picante Nivel 1 botella 350 ml</option>
-                        <option value="Miel Picante Nivel 2 botella 350 ml">Miel Picante Nivel 2 botella 350 ml</option>
-                        <option value="Miel Picante Nivel 3 botella 350 ml">Miel Picante Nivel 3 botella 350 ml</option>
-                        <option value="Miel Picante Nivel 1 sachet">Miel Picante Nivel 1 sachet</option>
-                        <option value="Miel Picante Nivel 2 sachet">Miel Picante Nivel 2 sachet</option>
-                        <option value="Miel Picante Nivel 3 sachet">Miel Picante Nivel 3 sachet</option>
-                        <option value="Miel Picante Nivel 1 galon">Miel Picante Nivel 1 galón</option>
-                        <option value="Miel Picante Nivel 2 galon">Miel Picante Nivel 2 galón</option>
-                        <option value="Miel Picante Nivel 3 galon">Miel Picante Nivel 3 galón</option>
-                    </select>
-                    <div class="mt-2 text-sm text-slate-600">
-                        Stock Actual: <span id="stockActual" class="font-semibold">N/A</span>
-                        <button type="button" id="refreshStockBtn" class="ml-2 text-xs px-2 py-1 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors">Actualizar Stock</button>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Tipo de Movimiento:</label>
-                    <div class="flex items-center space-x-4">
-                        <label class="flex items-center"><input type="radio" name="tipoMovimiento" value="Ingreso" required checked class="h-4 w-4 text-sky-600 border-slate-300 focus:ring-sky-500"><span class="ml-2 text-slate-700">Ingreso</span></label>
-                        <label class="flex items-center"><input type="radio" name="tipoMovimiento" value="Venta" required class="h-4 w-4 text-sky-600 border-slate-300 focus:ring-sky-500"><span class="ml-2 text-slate-700">Venta</span></label>
-                    </div>
-                </div>
-                <div>
-                    <label for="cantidad" class="block text-sm font-medium text-slate-700 mb-1">Cantidad:</label>
-                    <input type="number" id="cantidad" name="cantidad" required min="1" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="Ej: 10">
-                </div>
-                <!-- Campos específicos para Venta -->
-                <div id="camposVenta" class="space-y-6 hidden">
+                <div class="space-y-6">
                     <div>
-                        <label for="numeroFactura" class="block text-sm font-medium text-slate-700 mb-1">Número de Factura:</label>
-                        <input type="text" id="numeroFactura" name="numeroFactura" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="Ej: 001-001-0001234">
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Tipo de Movimiento:</label>
+                        <div class="flex items-center space-x-4">
+                            <label class="flex items-center"><input type="radio" name="tipoMovimiento" value="Ingreso" required checked class="h-4 w-4 text-sky-600 border-slate-300 focus:ring-sky-500"><span class="ml-2 text-slate-700">Ingreso</span></label>
+                            <label class="flex items-center"><input type="radio" name="tipoMovimiento" value="Venta" required class="h-4 w-4 text-sky-600 border-slate-300 focus:ring-sky-500"><span class="ml-2 text-slate-700">Venta</span></label>
+                        </div>
                     </div>
-                    <div>
-                        <label for="precioVentaTotal" class="block text-sm font-medium text-slate-700 mb-1">Precio de Venta Total (IVA Incluido):</label>
-                        <input type="number" id="precioVentaTotal" name="precioVentaTotal" step="0.01" min="0" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="Ej: 28.25">
+
+                    <!-- FORMULARIO DE INGRESO (SIMPLE) -->
+                    <div id="formIngreso" class="space-y-4">
+                        <div>
+                            <label for="productoIngreso" class="block text-sm font-medium text-slate-700 mb-1">Producto:</label>
+                             <select id="productoIngreso" name="producto" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500">
+                                <!-- Opciones se clonan aquí -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="cantidadIngreso" class="block text-sm font-medium text-slate-700 mb-1">Cantidad:</label>
+                            <input type="number" id="cantidadIngreso" name="cantidad" min="1" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: 10">
+                        </div>
                     </div>
-                    <div>
-                        <label for="descripcionVenta" class="block text-sm font-medium text-slate-700 mb-1">Descripción de la Venta:</label>
-                        <textarea id="descripcionVenta" name="descripcionVenta" rows="3" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="Ej: Venta a cliente minorista"></textarea>
+
+                    <!-- FORMULARIO DE VENTA (MÚLTIPLE) -->
+                    <div id="formVenta" class="hidden space-y-6">
+                         <div>
+                            <label for="numeroFactura" class="block text-sm font-medium text-slate-700 mb-1">Número de Factura:</label>
+                            <input type="text" id="numeroFactura" name="numeroFactura" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: 001-001-0001234">
+                        </div>
+                        <div id="productLines" class="space-y-4 border-t border-b border-slate-200 py-4">
+                            <!-- Las líneas de producto se agregarán aquí -->
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <button type="button" id="addProductBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg shadow-sm">+ Añadir Producto</button>
+                            <div class="text-right">
+                                <p class="text-slate-600">Total de la Venta:</p>
+                                <p id="saleTotal" class="text-2xl font-bold text-slate-800">$0.00</p>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="descripcionVenta" class="block text-sm font-medium text-slate-700 mb-1">Descripción de la Venta:</label>
+                            <textarea id="descripcionVenta" name="descripcionVenta" rows="2" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: Venta a cliente minorista"></textarea>
+                        </div>
                     </div>
                 </div>
-                <div class="flex items-center justify-end pt-4"><button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2">Registrar Movimiento</button></div>
+                <div class="flex items-center justify-end pt-6"><button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2">Registrar Movimiento</button></div>
             </form>
         </div>
-
+        
         <!-- Contenido de Gastos -->
         <div id="expenseContent" class="hidden">
+           <!-- El formulario de gastos sigue igual -->
             <form id="expenseForm" class="space-y-6">
                 <input type="hidden" name="formType" value="expense">
                 <div>
@@ -138,148 +117,194 @@
             </form>
         </div>
 
-        <!-- Contenedor de mensajes y loader -->
         <div class="flex items-center justify-end space-x-3 mt-6">
             <div id="loader" class="loader"></div>
             <div id="message" class="flex-grow p-4 rounded-lg text-center text-sm" role="alert"></div>
         </div>
     </div>
+    
+    <!-- Plantilla para las opciones de producto (para clonar) -->
+    <template id="productOptionsTemplate">
+        <option value="" disabled selected>Selecciona un producto...</option>
+        <option value="Miel Picante Nivel 1 botella 350 ml">Miel Picante Nivel 1 botella 350 ml</option>
+        <option value="Miel Picante Nivel 2 botella 350 ml">Miel Picante Nivel 2 botella 350 ml</option>
+        <option value="Miel Picante Nivel 3 botella 350 ml">Miel Picante Nivel 3 botella 350 ml</option>
+        <option value="Miel Picante Nivel 1 sachet">Miel Picante Nivel 1 sachet</option>
+        <option value="Miel Picante Nivel 2 sachet">Miel Picante Nivel 2 sachet</option>
+        <option value="Miel Picante Nivel 3 sachet">Miel Picante Nivel 3 sachet</option>
+        <option value="Miel Picante Nivel 1 galon">Miel Picante Nivel 1 galón</option>
+        <option value="Miel Picante Nivel 2 galon">Miel Picante Nivel 2 galón</option>
+        <option value="Miel Picante Nivel 3 galon">Miel Picante Nivel 3 galón</option>
+    </template>
 
     <script>
         const FULL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMapJvU3t9B7c0sfZIQRJbjPZpqjVVQCF9gsJrQd4evSVDCeNnPKlRfdkPLoxkZE8JyA/exec';
         
-        // Elementos del DOM
-        const inventoryForm = document.getElementById('inventoryForm');
-        const expenseForm = document.getElementById('expenseForm');
-        const messageDiv = document.getElementById('message');
-        const loader = document.getElementById('loader');
-
-        // Lógica de pestañas
+        // --- Elementos del DOM ---
         const tabInventoryBtn = document.getElementById('tabInventoryBtn');
         const tabExpenseBtn = document.getElementById('tabExpenseBtn');
         const inventoryContent = document.getElementById('inventoryContent');
         const expenseContent = document.getElementById('expenseContent');
-
-        function switchTab(activeTab) {
-            messageDiv.textContent = '';
-            messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm';
-            if (activeTab === 'inventory') {
-                tabInventoryBtn.classList.add('active');
-                tabExpenseBtn.classList.remove('active');
-                inventoryContent.classList.remove('hidden');
-                expenseContent.classList.add('hidden');
-            } else {
-                tabInventoryBtn.classList.remove('active');
-                tabExpenseBtn.classList.add('active');
-                inventoryContent.classList.add('hidden');
-                expenseContent.classList.remove('hidden');
-            }
-        }
-
+        const inventoryForm = document.getElementById('inventoryForm');
+        const expenseForm = document.getElementById('expenseForm');
+        const messageDiv = document.getElementById('message');
+        const loader = document.getElementById('loader');
+        const movementRadios = document.querySelectorAll('input[name="tipoMovimiento"]');
+        const formIngreso = document.getElementById('formIngreso');
+        const formVenta = document.getElementById('formVenta');
+        const productLinesContainer = document.getElementById('productLines');
+        const addProductBtn = document.getElementById('addProductBtn');
+        const saleTotalEl = document.getElementById('saleTotal');
+        const productOptionsTemplate = document.getElementById('productOptionsTemplate');
+        
+        // --- Lógica de Pestañas ---
         tabInventoryBtn.addEventListener('click', () => switchTab('inventory'));
         tabExpenseBtn.addEventListener('click', () => switchTab('expense'));
-
-        // Lógica del formulario de inventario
-        const tipoVentaRadio = document.querySelector('input[name="tipoMovimiento"][value="Venta"]');
-        const tipoIngresoRadio = document.querySelector('input[name="tipoMovimiento"][value="Ingreso"]');
-        const camposVentaDiv = document.getElementById('camposVenta');
-        const numeroFacturaInput = document.getElementById('numeroFactura');
-        const precioVentaTotalInput = document.getElementById('precioVentaTotal');
-        const productoSelect = document.getElementById('producto');
-        const stockActualSpan = document.getElementById('stockActual');
-        const refreshStockBtn = document.getElementById('refreshStockBtn');
-
-        function toggleCamposVenta() {
-            if (tipoVentaRadio.checked) {
-                camposVentaDiv.classList.remove('hidden');
-                numeroFacturaInput.required = true;
-                precioVentaTotalInput.required = true;
+        function switchTab(activeTab) {
+            messageDiv.textContent = ''; messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm';
+            if (activeTab === 'inventory') {
+                tabInventoryBtn.classList.add('active'); tabExpenseBtn.classList.remove('active');
+                inventoryContent.classList.remove('hidden'); expenseContent.classList.add('hidden');
             } else {
-                camposVentaDiv.classList.add('hidden');
-                numeroFacturaInput.required = false;
-                precioVentaTotalInput.required = false;
+                tabInventoryBtn.classList.remove('active'); tabExpenseBtn.classList.add('active');
+                inventoryContent.classList.add('hidden'); expenseContent.classList.remove('hidden');
             }
         }
 
-        tipoIngresoRadio.addEventListener('change', toggleCamposVenta);
-        tipoVentaRadio.addEventListener('change', toggleCamposVenta);
-        productoSelect.addEventListener('change', (e) => fetchStock(e.target.value));
-        refreshStockBtn.addEventListener('click', () => fetchStock(productoSelect.value));
-
-        async function fetchStock(productName) {
-            if (!productName) return;
-            stockActualSpan.textContent = 'Cargando...';
-            try {
-                const response = await fetch(`${FULL_SCRIPT_URL}?action=getStock&producto=${encodeURIComponent(productName)}`, { mode: 'cors' });
-                if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-                const data = await response.json();
-                stockActualSpan.textContent = data.success ? (data.stock ?? 'No encontrado') : 'Error';
-            } catch (error) {
-                stockActualSpan.textContent = 'Error de red';
-                showMessage(`Error al obtener stock: ${error.message}`, 'error');
+        // --- Lógica del Formulario de Inventario ---
+        movementRadios.forEach(radio => radio.addEventListener('change', toggleInventoryForms));
+        function toggleInventoryForms() {
+            const selectedValue = document.querySelector('input[name="tipoMovimiento"]:checked').value;
+            if (selectedValue === 'Venta') {
+                formVenta.classList.remove('hidden');
+                formIngreso.classList.add('hidden');
+                if (productLinesContainer.children.length === 0) addProductLine();
+            } else {
+                formVenta.classList.add('hidden');
+                formIngreso.classList.remove('hidden');
             }
         }
+        
+        // --- Lógica de Venta Múltiple ---
+        addProductBtn.addEventListener('click', addProductLine);
+        productLinesContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-product-btn')) {
+                e.target.closest('.product-line').remove();
+                updateSaleTotal();
+            }
+        });
+        productLinesContainer.addEventListener('input', updateSaleTotal);
+        
+        function addProductLine() {
+            const lineDiv = document.createElement('div');
+            lineDiv.className = 'product-line grid grid-cols-12 gap-2 items-center';
+            lineDiv.innerHTML = `
+                <div class="col-span-12 sm:col-span-5">
+                    <label class="sr-only">Producto</label>
+                    <select name="producto" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-1 focus:ring-sky-500">${productOptionsTemplate.innerHTML}</select>
+                </div>
+                <div class="col-span-6 sm:col-span-2">
+                     <label class="sr-only">Cantidad</label>
+                    <input type="number" name="cantidad" min="1" placeholder="Cant." class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-1 focus:ring-sky-500">
+                </div>
+                <div class="col-span-6 sm:col-span-3">
+                     <label class="sr-only">Precio Total</label>
+                    <input type="number" name="precioVentaTotal" step="0.01" min="0" placeholder="Precio Total" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-1 focus:ring-sky-500">
+                </div>
+                <div class="col-span-12 sm:col-span-2 flex justify-end">
+                    <button type="button" class="remove-product-btn text-red-500 hover:text-red-700 font-bold p-2">✕</button>
+                </div>
+            `;
+            productLinesContainer.appendChild(lineDiv);
+        }
 
-        // Función genérica para enviar formularios
-        async function handleFormSubmit(formElement) {
+        function updateSaleTotal() {
+            const lines = document.querySelectorAll('.product-line');
+            let total = 0;
+            lines.forEach(line => {
+                const priceInput = line.querySelector('input[name="precioVentaTotal"]');
+                total += parseFloat(priceInput.value) || 0;
+            });
+            saleTotalEl.textContent = `$${total.toFixed(2)}`;
+        }
+
+        // --- Lógica de Envío de Formularios ---
+        async function handleFormSubmit(e) {
+            e.preventDefault();
             loader.style.display = 'block';
-            messageDiv.textContent = '';
-            messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm';
+            messageDiv.textContent = ''; messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm';
             
+            const formElement = e.target;
             const formData = new FormData(formElement);
-            const data = Object.fromEntries(formData.entries());
+            let data;
+            
+            const movementType = formData.get('tipoMovimiento');
+            
+            if(formElement.id === 'inventoryForm' && movementType === 'Venta') {
+                const productLines = document.querySelectorAll('#productLines .product-line');
+                const productos = Array.from(productLines).map(line => ({
+                    producto: line.querySelector('select[name="producto"]').value,
+                    cantidad: line.querySelector('input[name="cantidad"]').value,
+                    precioVentaTotal: line.querySelector('input[name="precioVentaTotal"]').value,
+                }));
+                
+                if (productos.some(p => !p.producto || !p.cantidad || !p.precioVentaTotal)) {
+                   showMessage('Por favor, complete todos los campos para cada producto.', 'error');
+                   loader.style.display = 'none';
+                   return;
+                }
+
+                data = {
+                    formType: 'inventory',
+                    tipoMovimiento: 'Venta',
+                    numeroFactura: formData.get('numeroFactura'),
+                    descripcionVenta: formData.get('descripcionVenta'),
+                    productos: productos
+                };
+            } else {
+                 data = Object.fromEntries(formData.entries());
+            }
 
             try {
                 const response = await fetch(FULL_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'cors',
-                    cache: 'no-cache',
-                    redirect: 'follow',
-                    body: JSON.stringify(data)
+                    method: 'POST', mode: 'cors', cache: 'no-cache', redirect: 'follow', body: JSON.stringify(data)
                 });
-
                 const result = await response.json();
                 if (result.success) {
-                    showMessage(result.message || '¡Operación registrada exitosamente!', 'success');
+                    showMessage(result.message || '¡Operación registrada!', 'success');
                     formElement.reset();
-                    if (formElement.id === 'inventoryForm') {
-                        toggleCamposVenta();
-                        stockActualSpan.textContent = 'N/A';
-                        if (data.producto) fetchStock(data.producto);
+                    if(formElement.id === 'inventoryForm' && movementType === 'Venta') {
+                         productLinesContainer.innerHTML = '';
+                         addProductLine();
+                         updateSaleTotal();
                     }
+                    toggleInventoryForms();
                 } else {
-                    let errorMessage = result.error || 'Ocurrió un error desconocido.';
+                    let errorMessage = result.error || 'Error desconocido.';
                     if (result.error === 'STOCK_INSUFICIENTE') {
-                        errorMessage = `Error: Stock insuficiente para '${data.producto}'. Stock actual: ${result.currentStock}.`;
+                        errorMessage = `Error: Stock insuficiente para '${result.producto}'. Stock actual: ${result.currentStock}.`;
                     }
                     showMessage(errorMessage, 'error');
                 }
             } catch (error) {
-                showMessage(`Error de conexión: ${error.message}. Verifique su conexión y la configuración del script.`, 'error');
+                showMessage(`Error de conexión: ${error.message}.`, 'error');
             } finally {
                 loader.style.display = 'none';
             }
         }
-
-        inventoryForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            handleFormSubmit(inventoryForm);
-        });
-
-        expenseForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            handleFormSubmit(expenseForm);
-        });
+        inventoryForm.addEventListener('submit', handleFormSubmit);
+        expenseForm.addEventListener('submit', handleFormSubmit);
 
         function showMessage(msg, type) {
             messageDiv.textContent = msg;
             if (type === 'success') messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm bg-green-100 text-green-800';
             else if (type === 'error') messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm bg-red-100 text-red-800';
-            else messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm bg-sky-100 text-sky-800';
         }
 
         // Inicializar
-        toggleCamposVenta();
+        document.getElementById('productoIngreso').innerHTML = productOptionsTemplate.innerHTML;
+        toggleInventoryForms();
     </script>
 </body>
 </html>
+
