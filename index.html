@@ -222,9 +222,8 @@
             let total = 0;
             lines.forEach(line => {
                 const priceInput = line.querySelector('input[name="precioVenta"]');
-                const includesIVA = line.querySelector('input[name="incluyeIVA"]').checked;
                 const price = parseFloat(priceInput.value) || 0;
-                total += includesIVA ? price : price * 1.13;
+                total += price; // El total es siempre la suma de lo ingresado. El backend se encarga del desglose.
             });
             saleTotalEl.textContent = `$${total.toFixed(2)}`;
         }
