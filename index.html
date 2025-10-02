@@ -11,19 +11,73 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .tab-button.active { border-bottom-color: #3b82f6; color: #1e40af; font-weight: 600; }
+
+        /* --- Estilos para la Pestaña de Etiquetas --- */
+        #labels-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* Dos columnas por defecto */
+            gap: 10px;
+            padding: 1cm;
+            width: 21cm; /* Ancho A4 */
+            min-height: 29.7cm; /* Alto A4 */
+            background-color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin: 2rem auto;
+            border-radius: 8px;
+        }
+        .label {
+            border: 1px dashed #9ca3af;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-wrap: break-word;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        .label p, .label div { margin: 0; }
+        .label strong { font-weight: 600; color: #1f2937; }
+
+        /* Estilos de Impresión */
+        @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            #main-form-container, .non-printable { display: none !important; }
+            #print-area, #labels-container {
+                margin: 0; padding: 0; width: 100%; min-height: 0;
+                box-shadow: none; border: none; border-radius: 0;
+                background-color: transparent;
+            }
+            .label {
+                page-break-inside: avoid;
+                border: 1px solid #6b7280;
+            }
+        }
+
+        /* Responsividad para etiquetas */
+        @media (max-width: 768px) {
+            #labels-container {
+                width: 100%; min-height: auto; padding: 1rem;
+                grid-template-columns: 1fr; /* Una columna en móviles */
+            }
+        }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white shadow-2xl rounded-xl p-6 md:p-10 w-full max-w-3xl">
+<body class="bg-slate-100 text-slate-800 min-h-screen p-4">
+    
+    <!-- Contenedor Principal -->
+    <div id="main-form-container" class="bg-white shadow-2xl rounded-xl p-6 md:p-10 w-full max-w-3xl mx-auto">
         <header class="mb-6 text-center">
-            <h1 class="text-3xl md:text-4xl font-bold text-slate-700">🍯 Control Financiero y de Inventario</h1>
-            <p class="text-slate-600 mt-2">Gestiona tu inventario y registra tus gastos.</p>
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-700">🍯 Control de Negocio</h1>
+            <p class="text-slate-600 mt-2">Gestiona tu inventario, gastos y genera etiquetas de envío.</p>
         </header>
 
+        <!-- Navegación de Pestañas -->
         <div class="border-b border-slate-200 mb-6">
             <nav class="flex -mb-px space-x-6">
-                <button id="tabInventoryBtn" class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700 hover:border-slate-300">Movimientos de Inventario</button>
-                <button id="tabExpenseBtn" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700 hover:border-slate-300">Registro de Gastos</button>
+                <button id="tabInventoryBtn" class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Movimientos de Inventario</button>
+                <button id="tabExpenseBtn" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700">Registro de Gastos</button>
+                <button id="tabLabelsBtn" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700">Generar Etiquetas</button>
             </nav>
         </div>
 
@@ -39,30 +93,22 @@
                             <label class="flex items-center"><input type="radio" name="tipoMovimiento" value="Venta" required class="h-4 w-4 text-sky-600 border-slate-300 focus:ring-sky-500"><span class="ml-2 text-slate-700">Venta</span></label>
                         </div>
                     </div>
-
-                    <!-- FORMULARIO DE INGRESO (SIMPLE) -->
                     <div id="formIngreso" class="space-y-4">
                         <div>
                             <label for="productoIngreso" class="block text-sm font-medium text-slate-700 mb-1">Producto:</label>
-                             <select id="productoIngreso" name="producto" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500">
-                                <!-- Opciones se clonan aquí -->
-                            </select>
+                             <select id="productoIngreso" name="producto" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500"></select>
                         </div>
                         <div>
                             <label for="cantidadIngreso" class="block text-sm font-medium text-slate-700 mb-1">Cantidad:</label>
                             <input type="number" id="cantidadIngreso" name="cantidad" min="1" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: 10">
                         </div>
                     </div>
-
-                    <!-- FORMULARIO DE VENTA (MÚLTIPLE) -->
                     <div id="formVenta" class="hidden space-y-6">
                          <div>
                             <label for="numeroFactura" class="block text-sm font-medium text-slate-700 mb-1">Número de Factura:</label>
                             <input type="text" id="numeroFactura" name="numeroFactura" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: 001-001-0001234">
                         </div>
-                        <div id="productLines" class="space-y-4 border-t border-b border-slate-200 py-4">
-                            <!-- Las líneas de producto se agregarán aquí -->
-                        </div>
+                        <div id="productLines" class="space-y-4 border-t border-b border-slate-200 py-4"></div>
                         <div class="flex justify-between items-center">
                             <button type="button" id="addProductBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg shadow-sm">+ Añadir Producto</button>
                             <div class="text-right">
@@ -82,8 +128,7 @@
         
         <!-- Contenido de Gastos -->
         <div id="expenseContent" class="hidden">
-           <!-- El formulario de gastos sigue igual -->
-            <form id="expenseForm" class="space-y-6">
+             <form id="expenseForm" class="space-y-6">
                 <input type="hidden" name="formType" value="expense">
                 <div>
                     <label for="tipoGasto" class="block text-sm font-medium text-slate-700 mb-1">Tipo de Gasto:</label>
@@ -100,7 +145,7 @@
                 </div>
                 <div>
                     <label for="valorGasto" class="block text-sm font-medium text-slate-700 mb-1">Valor del Gasto Total (IVA Incluido):</label>
-                    <input type="number" id="valorGasto" name="valorGasto" required step="0.01" min="0" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="Ej: 50.75">
+                    <input type="number" id="valorGasto" name="valorGasto" required step="0.01" min="0" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: 50.75">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Método de Pago:</label>
@@ -111,18 +156,81 @@
                 </div>
                 <div>
                     <label for="descripcionGasto" class="block text-sm font-medium text-slate-700 mb-1">Descripción del Gasto:</label>
-                    <textarea id="descripcionGasto" name="descripcionGasto" required rows="3" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="Ej: Compra de cajas para envío"></textarea>
+                    <textarea id="descripcionGasto" name="descripcionGasto" required rows="3" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: Compra de cajas para envío"></textarea>
                 </div>
                 <div class="flex items-center justify-end pt-4"><button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2">Registrar Gasto</button></div>
             </form>
         </div>
 
+        <!-- Contenido de Generar Etiquetas -->
+        <div id="labelsContent" class="hidden">
+            <p class="text-slate-600 mb-6">Completa los campos para crear una nueva etiqueta y agrégala a la hoja de impresión.</p>
+            <form id="label-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div>
+                    <label for="labelName" class="block text-sm font-medium text-slate-700 mb-1">Nombre y Apellido</label>
+                    <input type="text" id="labelName" required class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500">
+                </div>
+                <div>
+                    <label for="labelPhone" class="block text-sm font-medium text-slate-700 mb-1">Teléfono</label>
+                    <input type="tel" id="labelPhone" required class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500">
+                </div>
+                <div class="md:col-span-2">
+                    <label for="labelAddress" class="block text-sm font-medium text-slate-700 mb-1">Dirección de Entrega</label>
+                    <textarea id="labelAddress" rows="3" required class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500"></textarea>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Productos a Entregar</label>
+                    <div id="label-products-list" class="space-y-3"></div>
+                    <button type="button" id="add-label-product-btn" class="mt-3 text-sm text-sky-600 hover:text-sky-800 font-semibold">+ Añadir otro producto</button>
+                </div>
+                <div>
+                    <label for="labelPrice" class="block text-sm font-medium text-slate-700 mb-1">Precio (Total)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">$</span>
+                        <input type="number" id="labelPrice" step="0.01" required class="w-full pl-7 pr-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500">
+                    </div>
+                </div>
+                <div>
+                    <label for="labelEmail" class="block text-sm font-medium text-slate-700 mb-1">Correo Electrónico</label>
+                    <input type="email" id="labelEmail" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500">
+                </div>
+                <div class="md:col-span-2">
+                    <label for="label-payment-method" class="block text-sm font-medium text-slate-700 mb-1">Método de Pago</label>
+                    <select id="label-payment-method" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500">
+                        <option>Efectivo</option>
+                        <option>Transferencia</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                     <button type="submit" class="w-full mt-4 bg-sky-600 text-white font-semibold py-3 px-4 rounded-md hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-colors duration-200">
+                        Agregar Etiqueta a la Cola
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Mensaje de estado para Inventario/Gastos -->
         <div class="flex items-center justify-end space-x-3 mt-6">
             <div id="loader" class="loader"></div>
             <div id="message" class="flex-grow p-4 rounded-lg text-center text-sm" role="alert"></div>
         </div>
     </div>
-    
+
+    <!-- Contenedor para la impresión de etiquetas (fuera del contenedor principal) -->
+    <div class="non-printable max-w-4xl mx-auto mt-8">
+        <div id="action-buttons" class="hidden flex-col sm:flex-row gap-4 mb-8">
+            <button id="print-btn" class="w-full sm:w-auto flex-1 bg-green-600 text-white font-semibold py-3 px-6 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                Imprimir Todas las Etiquetas
+            </button>
+            <button id="clear-btn" class="w-full sm:w-auto flex-1 bg-red-600 text-white font-semibold py-3 px-6 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                Limpiar Cola de Impresión
+            </button>
+        </div>
+    </div>
+    <div id="print-area">
+        <div id="labels-container"></div>
+    </div>
+
     <template id="productOptionsTemplate">
         <option value="" disabled selected>Selecciona un producto...</option>
         <option value="Miel Picante Nivel 1 botella 350 ml">Miel Picante Nivel 1 botella 350 ml</option>
@@ -137,47 +245,72 @@
     </template>
 
     <script>
+        // --- CONSTANTES Y REFERENCIAS GLOBALES ---
         const FULL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMapJvU3t9B7c0sfZIQRJbjPZpqjVVQCF9gsJrQd4evSVDCeNnPKlRfdkPLoxkZE8JyA/exec';
-        
+        const productOptionsTemplate = document.getElementById('productOptionsTemplate');
+
+        // Referencias Pestañas
         const tabInventoryBtn = document.getElementById('tabInventoryBtn');
         const tabExpenseBtn = document.getElementById('tabExpenseBtn');
+        const tabLabelsBtn = document.getElementById('tabLabelsBtn');
         const inventoryContent = document.getElementById('inventoryContent');
         const expenseContent = document.getElementById('expenseContent');
-        const inventoryForm = document.getElementById('inventoryForm');
-        const expenseForm = document.getElementById('expenseForm');
+        const labelsContent = document.getElementById('labelsContent');
+
+        // Referencias Comunes
         const messageDiv = document.getElementById('message');
         const loader = document.getElementById('loader');
+
+        // Referencias Pestaña Inventario
+        const inventoryForm = document.getElementById('inventoryForm');
+        const expenseForm = document.getElementById('expenseForm');
         const movementRadios = document.querySelectorAll('input[name="tipoMovimiento"]');
         const formIngreso = document.getElementById('formIngreso');
         const formVenta = document.getElementById('formVenta');
         const productLinesContainer = document.getElementById('productLines');
         const addProductBtn = document.getElementById('addProductBtn');
         const saleTotalEl = document.getElementById('saleTotal');
-        const productOptionsTemplate = document.getElementById('productOptionsTemplate');
-        
+
+        // Referencias Pestaña Etiquetas
+        const labelForm = document.getElementById('label-form');
+        const labelsContainer = document.getElementById('labels-container');
+        const printBtn = document.getElementById('print-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const addLabelProductBtn = document.getElementById('add-label-product-btn');
+        const labelProductsList = document.getElementById('label-products-list');
+        const actionButtons = document.getElementById('action-buttons');
+
+
+        // --- LÓGICA DE NAVEGACIÓN DE PESTAÑAS ---
         tabInventoryBtn.addEventListener('click', () => switchTab('inventory'));
         tabExpenseBtn.addEventListener('click', () => switchTab('expense'));
+        tabLabelsBtn.addEventListener('click', () => switchTab('labels'));
+
         function switchTab(activeTab) {
             messageDiv.textContent = ''; messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm';
-            if (activeTab === 'inventory') {
-                tabInventoryBtn.classList.add('active'); tabExpenseBtn.classList.remove('active');
-                inventoryContent.classList.remove('hidden'); expenseContent.classList.add('hidden');
-            } else {
-                tabInventoryBtn.classList.remove('active'); tabExpenseBtn.classList.add('active');
-                inventoryContent.classList.add('hidden'); expenseContent.classList.remove('hidden');
+            
+            const tabs = { inventory: tabInventoryBtn, expense: tabExpenseBtn, labels: tabLabelsBtn };
+            const contents = { inventory: inventoryContent, expense: expenseContent, labels: labelsContent };
+
+            for (const key in tabs) {
+                const isActive = key === activeTab;
+                tabs[key].classList.toggle('active', isActive);
+                tabs[key].classList.toggle('text-slate-500', !isActive);
+                contents[key].classList.toggle('hidden', !isActive);
             }
+            // Muestra u oculta los botones de impresión de etiquetas
+            actionButtons.classList.toggle('hidden', activeTab !== 'labels');
         }
 
+
+        // --- LÓGICA PESTAÑA INVENTARIO Y GASTOS ---
         movementRadios.forEach(radio => radio.addEventListener('change', toggleInventoryForms));
         function toggleInventoryForms() {
             const selectedValue = document.querySelector('input[name="tipoMovimiento"]:checked').value;
-            if (selectedValue === 'Venta') {
-                formVenta.classList.remove('hidden');
-                formIngreso.classList.add('hidden');
-                if (productLinesContainer.children.length === 0) addProductLine();
-            } else {
-                formVenta.classList.add('hidden');
-                formIngreso.classList.remove('hidden');
+            formVenta.classList.toggle('hidden', selectedValue !== 'Venta');
+            formIngreso.classList.toggle('hidden', selectedValue === 'Venta');
+            if (selectedValue === 'Venta' && productLinesContainer.children.length === 0) {
+                addProductLine();
             }
         }
         
@@ -194,26 +327,14 @@
             const lineDiv = document.createElement('div');
             lineDiv.className = 'product-line grid grid-cols-12 gap-2 items-center border-t pt-3 first:border-t-0 first:pt-0';
             lineDiv.innerHTML = `
-                <div class="col-span-12 sm:col-span-4">
-                    <label class="sr-only">Producto</label>
-                    <select name="producto" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-1 focus:ring-sky-500">${productOptionsTemplate.innerHTML}</select>
-                </div>
-                <div class="col-span-4 sm:col-span-2">
-                     <label class="sr-only">Cantidad</label>
-                    <input type="number" name="cantidad" min="1" placeholder="Cant." class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-1 focus:ring-sky-500">
-                </div>
-                <div class="col-span-8 sm:col-span-3">
-                     <label class="sr-only">Precio</label>
-                    <input type="number" name="precioVenta" step="0.01" min="0" placeholder="Precio" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-1 focus:ring-sky-500">
-                </div>
+                <div class="col-span-12 sm:col-span-4"><select name="producto" class="w-full p-2 border border-slate-300 rounded-md shadow-sm">${productOptionsTemplate.innerHTML}</select></div>
+                <div class="col-span-4 sm:col-span-2"><input type="number" name="cantidad" min="1" placeholder="Cant." class="w-full p-2 border border-slate-300 rounded-md shadow-sm"></div>
+                <div class="col-span-8 sm:col-span-3"><input type="number" name="precioVenta" step="0.01" min="0" placeholder="Precio" class="w-full p-2 border border-slate-300 rounded-md shadow-sm"></div>
                 <div class="col-span-10 sm:col-span-2 flex items-center justify-start sm:justify-center">
                     <input type="checkbox" name="incluyeIVA" checked class="h-4 w-4 text-sky-600 border-slate-300 rounded focus:ring-sky-500">
                     <label class="ml-2 text-xs text-slate-600">Incl. IVA</label>
                 </div>
-                <div class="col-span-2 sm:col-span-1 flex justify-end">
-                    <button type="button" class="remove-product-btn text-red-500 hover:text-red-700 font-bold p-2 rounded-full leading-none">✕</button>
-                </div>
-            `;
+                <div class="col-span-2 sm:col-span-1 flex justify-end"><button type="button" class="remove-product-btn text-red-500 hover:text-red-700 font-bold p-2 rounded-full leading-none">✕</button></div>`;
             productLinesContainer.appendChild(lineDiv);
         }
 
@@ -221,9 +342,8 @@
             const lines = document.querySelectorAll('.product-line');
             let total = 0;
             lines.forEach(line => {
-                const priceInput = line.querySelector('input[name="precioVenta"]');
-                const price = parseFloat(priceInput.value) || 0;
-                total += price; // El total es siempre la suma de lo ingresado. El backend se encarga del desglose.
+                const price = parseFloat(line.querySelector('input[name="precioVenta"]').value) || 0;
+                total += price;
             });
             saleTotalEl.textContent = `$${total.toFixed(2)}`;
         }
@@ -255,8 +375,7 @@
                 }
 
                 data = {
-                    formType: 'inventory',
-                    tipoMovimiento: 'Venta',
+                    formType: 'inventory', tipoMovimiento: 'Venta',
                     numeroFactura: formData.get('numeroFactura'),
                     descripcionVenta: formData.get('descripcionVenta'),
                     productos: productos
@@ -267,7 +386,7 @@
 
             try {
                 const response = await fetch(FULL_SCRIPT_URL, {
-                    method: 'POST', mode: 'cors', cache: 'no-cache', redirect: 'follow', body: JSON.stringify(data)
+                    method: 'POST', mode: 'cors', body: JSON.stringify(data)
                 });
                 const result = await response.json();
                 if (result.success) {
@@ -303,7 +422,78 @@
 
         document.getElementById('productoIngreso').innerHTML = productOptionsTemplate.innerHTML;
         toggleInventoryForms();
+
+        // --- LÓGICA PESTAÑA GENERAR ETIQUETAS ---
+        addLabelProductBtn.addEventListener('click', addLabelProductLine);
+        labelProductsList.addEventListener('click', (event) => {
+            if (event.target.classList.contains('remove-label-product-btn')) {
+                event.target.closest('.label-product-entry').remove();
+            }
+        });
+
+        function addLabelProductLine() {
+            const newProductEntry = document.createElement('div');
+            newProductEntry.className = 'label-product-entry grid grid-cols-12 gap-2 items-center';
+            newProductEntry.innerHTML = `
+                <div class="col-span-3">
+                    <input type="number" name="quantity" value="1" min="1" placeholder="Cant." required class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm">
+                </div>
+                <div class="col-span-8">
+                    <select name="product" required class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm">${productOptionsTemplate.innerHTML}</select>
+                </div>
+                <div class="col-span-1 text-center">
+                    <button type="button" class="remove-label-product-btn text-red-500 hover:text-red-700 font-bold text-xl">&times;</button>
+                </div>
+            `;
+            labelProductsList.appendChild(newProductEntry);
+        }
+
+        labelForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const name = document.getElementById('labelName').value;
+            const phone = document.getElementById('labelPhone').value;
+            const address = document.getElementById('labelAddress').value;
+            const price = parseFloat(document.getElementById('labelPrice').value).toFixed(2);
+            const email = document.getElementById('labelEmail').value;
+            const paymentMethod = document.getElementById('label-payment-method').value;
+
+            const productEntries = document.querySelectorAll('.label-product-entry');
+            let productsHTML = '<ul class="list-disc list-inside pl-1 text-sm">';
+            productEntries.forEach(entry => {
+                const quantity = entry.querySelector('input[name="quantity"]').value;
+                const product = entry.querySelector('select[name="product"]').value;
+                if (product.trim()) {
+                    productsHTML += `<li>${quantity} x ${product}</li>`;
+                }
+            });
+            productsHTML += '</ul>';
+
+            const labelElement = document.createElement('div');
+            labelElement.classList.add('label');
+            labelElement.innerHTML = `
+                <p><strong>Nombre:</strong> ${name}</p>
+                <p><strong>Teléfono:</strong> ${phone}</p>
+                <p><strong>Dirección:</strong> ${address}</p>
+                <div><strong>Productos:</strong>${productsHTML}</div>
+                <p><strong>Total:</strong> $${price}</p>
+                <p><strong>Correo:</strong> ${email || 'N/A'}</p>
+                <p class="mt-2 pt-2 border-t border-slate-200"><strong>Método de Pago:</strong> ${paymentMethod}</p>
+            `;
+            labelsContainer.appendChild(labelElement);
+
+            labelForm.reset();
+            labelProductsList.innerHTML = '';
+            addLabelProductLine();
+            document.getElementById('labelName').focus();
+        });
+
+        printBtn.addEventListener('click', () => window.print());
+        clearBtn.addEventListener('click', () => labelsContainer.innerHTML = '');
+
+        // Inicialización de la pestaña de etiquetas
+        addLabelProductLine();
     </script>
 </body>
 </html>
+
 
