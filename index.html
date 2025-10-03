@@ -12,7 +12,6 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .tab-button.active { border-bottom-color: #3b82f6; color: #1e40af; font-weight: 600; }
 
-        /* --- Estilos para la Pestaña de Etiquetas --- */
         #labels-container {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -40,16 +39,15 @@
         .label p, .label div { margin: 0; }
         .label strong { font-weight: 600; color: #1f2937; }
 
-        /* Estilos de Impresión */
         @media print {
             @page {
                 size: auto;
-                margin: 0.5cm; /* Reduce el margen para eliminar encabezados/pies de página */
+                margin: 0.5cm;
             }
             body {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
-                background-color: #ffffff !important; /* Forza el fondo blanco */
+                background-color: #ffffff !important;
             }
             #main-form-container, .non-printable {
                 display: none !important;
@@ -65,7 +63,6 @@
             }
         }
 
-        /* Responsividad para etiquetas */
         @media (max-width: 768px) {
             #labels-container {
                 min-height: auto; padding: 1rem;
@@ -75,14 +72,12 @@
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen p-4">
     
-    <!-- Contenedor Principal -->
     <div id="main-form-container" class="bg-white shadow-2xl rounded-xl p-6 md:p-10 w-full max-w-3xl mx-auto">
         <header class="mb-6 text-center">
             <h1 class="text-3xl md:text-4xl font-bold text-slate-700">🍯 Control de Negocio</h1>
             <p class="text-slate-600 mt-2">Gestiona tu inventario, gastos y genera etiquetas de envío.</p>
         </header>
 
-        <!-- Navegación de Pestañas -->
         <div class="border-b border-slate-200 mb-6">
             <nav class="flex flex-wrap -mb-px space-x-4">
                 <button id="tabInventoryBtn" class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Movimientos de Inventario</button>
@@ -91,7 +86,6 @@
             </nav>
         </div>
 
-        <!-- Contenido de Inventario -->
         <div id="inventoryContent">
             <form id="inventoryForm">
                 <input type="hidden" name="formType" value="inventory">
@@ -136,7 +130,6 @@
             </form>
         </div>
         
-        <!-- Contenido de Gastos -->
         <div id="expenseContent" class="hidden">
              <form id="expenseForm" class="space-y-6">
                 <input type="hidden" name="formType" value="expense">
@@ -172,7 +165,6 @@
             </form>
         </div>
 
-        <!-- Contenido de Generar Etiquetas -->
         <div id="labelsContent" class="hidden">
             <p class="text-slate-600 mb-6">Completa los campos para crear una nueva etiqueta y agrégala a la hoja de impresión.</p>
             <form id="label-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -215,14 +207,12 @@
             </form>
         </div>
 
-        <!-- Mensaje de estado para Inventario/Gastos -->
         <div class="flex items-center justify-end space-x-3 mt-6">
             <div id="loader" class="loader"></div>
             <div id="message" class="flex-grow p-4 rounded-lg text-center text-sm" role="alert"></div>
         </div>
     </div>
 
-    <!-- Contenedor para la impresión de etiquetas (fuera del contenedor principal) -->
     <div class="non-printable max-w-3xl mx-auto mt-8">
         <div id="action-buttons" class="hidden flex-col sm:flex-row gap-4 mb-8">
             <button id="print-btn" class="w-full sm:w-auto flex-1 bg-green-600 text-white font-semibold py-3 px-6 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
@@ -239,15 +229,15 @@
 
     <template id="productOptionsTemplate">
         <option value="" disabled selected>Selecciona un producto...</option>
-        <option value="Miel Picante Nivel 1 botella 350 ml">Miel Picante Nivel 1 botella 350 ml</option>
-        <option value="Miel Picante Nivel 2 botella 350 ml">Miel Picante Nivel 2 botella 350 ml</option>
-        <option value="Miel Picante Nivel 3 botella 350 ml">Miel Picante Nivel 3 botella 350 ml</option>
-        <option value="Miel Picante Nivel 1 sachet">Miel Picante Nivel 1 sachet</option>
-        <option value="Miel Picante Nivel 2 sachet">Miel Picante Nivel 2 sachet</option>
-        <option value="Miel Picante Nivel 3 sachet">Miel Picante Nivel 3 sachet</option>
-        <option value="Miel Picante Nivel 1 galon">Miel Picante Nivel 1 galón</option>
-        <option value="Miel Picante Nivel 2 galon">Miel Picante Nivel 2 galón</option>
-        <option value="Miel Picante Nivel 3 galon">Miel Picante Nivel 3 galón</option>
+        <option value="Miel Picante Baja botella 350 g">Miel Picante Baja botella 350 g</option>
+        <option value="Miel Picante Media botella 350 g">Miel Picante Media botella 350 g</option>
+        <option value="Miel Picante Alta botella 350 g">Miel Picante Alta botella 350 g</option>
+        <option value="Miel Picante Baja sachet">Miel Picante Baja sachet</option>
+        <option value="Miel Picante Media sachet">Miel Picante Media sachet</option>
+        <option value="Miel Picante Alta sachet">Miel Picante Alta sachet</option>
+        <option value="Miel Picante Baja galón">Miel Picante Baja galón</option>
+        <option value="Miel Picante Media galón">Miel Picante Media galón</option>
+        <option value="Miel Picante Alta galón">Miel Picante Alta galón</option>
     </template>
 
     <script>
@@ -304,7 +294,6 @@
                 tabs[key].classList.toggle('text-slate-500', !isActive);
                 contents[key].classList.toggle('hidden', !isActive);
             }
-            // Muestra u oculta los botones de impresión de etiquetas
             actionButtons.classList.toggle('hidden', activeTab !== 'labels');
         }
 
