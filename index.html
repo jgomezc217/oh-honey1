@@ -235,5 +235,280 @@
         <option value="Miel Picante Alta galón">Miel Picante Alta galón</option>
     </template>
 
-    
+    <script>
+        // --- 1. CONSTANTES Y REFERENCIAS A ELEMENTOS DEL DOM ---
+        const FULL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMapJvU3t9B7c0sfZIQRJbjPZpqjVVQCF9gsJrQd4evSVDCeNnPKlRfdkPLoxkZE8JyA/exec';
+        
+        // Plantillas
+        const productOptionsTemplate = document.getElementById('productOptionsTemplate');
+
+        // Pestañas y Contenidos
+        const tabInventoryBtn = document.getElementById('tabInventoryBtn');
+        const tabExpenseBtn = document.getElementById('tabExpenseBtn');
+        const tabLabelsBtn = document.getElementById('tabLabelsBtn');
+        const inventoryContent = document.getElementById('inventoryContent');
+        const expenseContent = document.getElementById('expenseContent');
+        const labelsContent = document.getElementById('labelsContent');
+
+        // Formularios
+        const inventoryForm = document.getElementById('inventoryForm');
+        const expenseForm = document.getElementById('expenseForm');
+        const labelForm = document.getElementById('label-form');
+
+        // Elementos de Inventario
+        const movementRadios = document.querySelectorAll('input[name="tipoMovimiento"]');
+        const formIngreso = document.getElementById('formIngreso');
+        const formVenta = document.getElementById('formVenta');
+        const productLinesContainer = document.getElementById('productLines'); 
+        const addProductBtn = document.getElementById('addProductBtn');
+        const saleTotalEl = document.getElementById('saleTotal');
+        
+        // Elementos de Etiquetas
+        const labelsContainer = document.getElementById('labels-container');
+        const printBtn = document.getElementById('print-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const addLabelProductBtn = document.getElementById('add-label-product-btn');
+        const labelProductsList = document.getElementById('label-products-list');
+        const actionButtons = document.getElementById('action-buttons');
+
+        // Elementos Comunes
+        const loader = document.getElementById('loader');
+        const messageDiv = document.getElementById('message');
+
+        // --- 2. FUNCIONES ---
+
+        function switchTab(activeTab) {
+            const tabs = { inventory: tabInventoryBtn, expense: tabExpenseBtn, labels: tabLabelsBtn };
+            const contents = { inventory: inventoryContent, expense: expenseContent, labels: labelsContent };
+            
+            Object.keys(tabs).forEach(key => {
+                const isActive = key === activeTab;
+                tabs[key].classList.toggle('active', isActive);
+                tabs[key].classList.toggle('text-slate-500', !isActive);
+                tabs[key].classList.toggle('hover:text-slate-700', !isActive);
+                contents[key].classList.toggle('hidden', !isActive);
+            });
+            messageDiv.textContent = '';
+            messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm';
+            actionButtons.classList.toggle('hidden', activeTab !== 'labels');
+        }
+
+        function toggleInventoryForms() {
+            const selectedValue = document.querySelector('input[name="tipoMovimiento"]:checked').value;
+            formVenta.classList.toggle('hidden', selectedValue !== 'Venta');
+            formIngreso.classList.toggle('hidden', selectedValue === 'Venta');
+            if (selectedValue === 'Venta' && productLinesContainer.children.length === 0) {
+                addProductLine();
+            }
+        }
+
+        function addProductLine() {
+            const lineDiv = document.createElement('div');
+            lineDiv.className = 'product-line grid grid-cols-12 gap-x-2 gap-y-3 items-center border-t pt-3';
+            lineDiv.innerHTML = `
+                <div class="col-span-12 sm:col-span-4"><select name="producto" class="w-full p-2 border border-slate-300 rounded-md shadow-sm">${productOptionsTemplate.innerHTML}</select></div>
+                <div class="col-span-4 sm:col-span-2"><input type="number" name="cantidad" min="1" placeholder="Cant." class="w-full p-2 border border-slate-300 rounded-md shadow-sm"></div>
+                <div class="col-span-8 sm:col-span-2"><input type="number" name="precioUnitario" step="0.01" min="0" placeholder="P. Unit." class="w-full p-2 border border-slate-300 rounded-md shadow-sm"></div>
+                <div class="col-span-8 sm:col-span-3"><input type="text" name="subtotal" readonly class="w-full p-2 bg-slate-100 border-slate-300 rounded-md text-right font-medium" value="$0.00"></div>
+                <div class="col-span-4 sm:col-span-1 flex items-center justify-end space-x-2">
+                    <input type="checkbox" name="incluyeIVA" checked class="h-4 w-4 text-sky-600 border-slate-300 rounded focus:ring-sky-500">
+                    <label class="text-xs text-slate-500">IVA</label>
+                    <button type="button" class="remove-product-btn text-red-500 hover:text-red-700 font-bold p-1 rounded-full leading-none flex items-center justify-center h-6 w-6">✕</button>
+                </div>`;
+            productLinesContainer.appendChild(lineDiv);
+        }
+
+        function updateLineAndTotal(lineElement) {
+            const qty = parseFloat(lineElement.querySelector('input[name="cantidad"]').value) || 0;
+            const unitPrice = parseFloat(lineElement.querySelector('input[name="precioUnitario"]').value) || 0;
+            const subtotal = qty * unitPrice;
+            lineElement.querySelector('input[name="subtotal"]').value = `$${subtotal.toFixed(2)}`;
+            updateSaleTotal();
+        }
+
+        function updateSaleTotal() {
+            const lines = document.querySelectorAll('.product-line');
+            let total = 0;
+            lines.forEach(line => {
+                const qty = parseFloat(line.querySelector('input[name="cantidad"]').value) || 0;
+                const unitPrice = parseFloat(line.querySelector('input[name="precioUnitario"]').value) || 0;
+                total += qty * unitPrice;
+            });
+            saleTotalEl.textContent = `$${total.toFixed(2)}`;
+        }
+
+        function addLabelProductLine() {
+            const newProductEntry = document.createElement('div');
+            newProductEntry.className = 'label-product-entry grid grid-cols-12 gap-2 items-center';
+            newProductEntry.innerHTML = `
+                <div class="col-span-3">
+                    <input type="number" name="quantity" value="1" min="1" placeholder="Cant." required class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm">
+                </div>
+                <div class="col-span-8">
+                    <select name="product" required class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm">${productOptionsTemplate.innerHTML}</select>
+                </div>
+                <div class="col-span-1 text-center">
+                    <button type="button" class="remove-label-product-btn text-red-500 hover:text-red-700 font-bold text-xl">&times;</button>
+                </div>
+            `;
+            labelProductsList.appendChild(newProductEntry);
+        }
+
+        function showMessage(msg, type) {
+            messageDiv.textContent = msg;
+            if (type === 'success') {
+                messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm bg-green-100 text-green-800';
+            } else if (type === 'error') {
+                messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm bg-red-100 text-red-800';
+            }
+        }
+        
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            loader.style.display = 'block';
+            messageDiv.textContent = '';
+            messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm';
+            
+            const formElement = e.target;
+            const formData = new FormData(formElement);
+            let data;
+            
+            if(formElement.id === 'inventoryForm' && formData.get('tipoMovimiento') === 'Venta') {
+                const productLines = document.querySelectorAll('#productLines .product-line');
+                const productos = Array.from(productLines).map(line => ({
+                    producto: line.querySelector('select[name="producto"]').value,
+                    cantidad: line.querySelector('input[name="cantidad"]').value,
+                    precioUnitario: line.querySelector('input[name="precioUnitario"]').value,
+                    incluyeIVA: line.querySelector('input[name="incluyeIVA"]').checked,
+                }));
+
+                if (productos.some(p => !p.producto || !p.cantidad || !p.precioUnitario)) {
+                    showMessage('Por favor, complete todos los campos de producto.', 'error');
+                    loader.style.display = 'none';
+                    return;
+                }
+
+                data = {
+                    formType: 'inventory',
+                    tipoMovimiento: 'Venta',
+                    esMuestra: formData.get('esMuestra') === 'on',
+                    numeroFactura: formData.get('numeroFactura'),
+                    descripcionVenta: formData.get('descripcionVenta'),
+                    productos: productos
+                };
+            } else {
+                 data = { formType: formElement.id === 'inventoryForm' ? 'inventory' : 'expense', ...Object.fromEntries(formData.entries()) };
+            }
+
+            try {
+                const response = await fetch(FULL_SCRIPT_URL, {
+                    method: 'POST', mode: 'cors', body: JSON.stringify(data)
+                });
+                if (!response.ok) throw new Error(`Error de red: ${response.statusText}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage(result.message || '¡Operación registrada!', 'success');
+                    formElement.reset();
+                    if(formElement.id === 'inventoryForm' && data.tipoMovimiento === 'Venta') {
+                         productLinesContainer.innerHTML = '';
+                         addProductLine();
+                         updateSaleTotal();
+                    }
+                    toggleInventoryForms();
+                } else {
+                    let errorMessage = result.error || 'Error desconocido.';
+                    if (result.error === 'STOCK_INSUFICIENTE') {
+                        errorMessage = `Error: Stock insuficiente para '${result.producto}'. Stock actual: ${result.currentStock}.`;
+                    }
+                    showMessage(errorMessage, 'error');
+                }
+            } catch (error) {
+                showMessage(`Error de conexión: ${error.message}.`, 'error');
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        // --- 3. EVENT LISTENERS E INICIALIZACIÓN ---
+        tabInventoryBtn.addEventListener('click', () => switchTab('inventory'));
+        tabExpenseBtn.addEventListener('click', () => switchTab('expense'));
+        tabLabelsBtn.addEventListener('click', () => switchTab('labels'));
+        
+        inventoryForm.addEventListener('submit', handleFormSubmit);
+        expenseForm.addEventListener('submit', handleFormSubmit);
+        
+        movementRadios.forEach(radio => radio.addEventListener('change', toggleInventoryForms));
+        
+        addProductBtn.addEventListener('click', addProductLine);
+        
+        productLinesContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-product-btn')) {
+                e.target.closest('.product-line').remove();
+                updateSaleTotal();
+            }
+        });
+        
+        productLinesContainer.addEventListener('input', (e) => {
+            if (e.target.name === 'cantidad' || e.target.name === 'precioUnitario') {
+                updateLineAndTotal(e.target.closest('.product-line'));
+            }
+        });
+        
+        // --- Lógica para Pestaña de Etiquetas (Restaurada) ---
+        addLabelProductBtn.addEventListener('click', addLabelProductLine);
+        labelProductsList.addEventListener('click', (event) => {
+            if (event.target.classList.contains('remove-label-product-btn')) {
+                event.target.closest('.label-product-entry').remove();
+            }
+        });
+
+        labelForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const name = document.getElementById('labelName').value;
+            const phone = document.getElementById('labelPhone').value;
+            const address = document.getElementById('labelAddress').value;
+            const price = parseFloat(document.getElementById('labelPrice').value).toFixed(2);
+            const paymentMethod = document.getElementById('label-payment-method').value;
+
+            const productEntries = document.querySelectorAll('.label-product-entry');
+            let productsHTML = '<ul class="list-disc list-inside pl-1 text-sm">';
+            productEntries.forEach(entry => {
+                const quantity = entry.querySelector('input[name="quantity"]').value;
+                const product = entry.querySelector('select[name="product"]').value;
+                if (product.trim()) {
+                    productsHTML += `<li>${quantity} x ${product}</li>`;
+                }
+            });
+            productsHTML += '</ul>';
+
+            const labelElement = document.createElement('div');
+            labelElement.classList.add('label');
+            labelElement.innerHTML = `
+                <p><strong>Nombre:</strong> ${name}</p>
+                <p><strong>Teléfono:</strong> ${phone}</p>
+                <p><strong>Dirección:</strong> ${address}</p>
+                <div><strong>Productos:</strong>${productsHTML}</div>
+                <p><strong>Total:</strong> $${price}</p>
+                <p class="mt-2 pt-2 border-t border-slate-200"><strong>Método de Pago:</strong> ${paymentMethod}</p>
+            `;
+            labelsContainer.appendChild(labelElement);
+
+            labelForm.reset();
+            labelProductsList.innerHTML = '';
+            addLabelProductLine();
+            document.getElementById('labelName').focus();
+        });
+
+        printBtn.addEventListener('click', () => window.print());
+        clearBtn.addEventListener('click', () => labelsContainer.innerHTML = '');
+
+        // --- INICIALIZACIÓN GENERAL ---
+        document.getElementById('productoIngreso').innerHTML = productOptionsTemplate.innerHTML;
+        addLabelProductLine(); // Inicializa la primera línea de producto en etiquetas
+        toggleInventoryForms();
+
+    </script>
+</body>
+</html>
 
