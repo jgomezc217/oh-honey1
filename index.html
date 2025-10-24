@@ -107,7 +107,7 @@
                             <label for="productoIngreso" class="block text-sm font-medium text-slate-700 mb-1">Producto:</label>
                             <div>
                                 <select id="productoIngreso" name="producto" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500"></select>
-                                <div id="stockIngreso" class="text-right text-sm text-slate-500 font-semibold h-5 mt-1 pr-1"></div>
+                                <div id="stockIngreso" class="text-right text-sm text-slate-500 font-semibold h-5 mt-1 pr-1"></div> <!-- Stock display para Ingreso -->
                             </div>
                         </div>
                         <div>
@@ -144,7 +144,7 @@
             </form>
         </div>
         
-        <!-- PESTAÑA DE GASTOS (RESTAURADA) -->
+        <!-- PESTAÑA DE GASTOS (CON CHECKBOX IVA) -->
         <div id="expenseContent" class="hidden">
              <form id="expenseForm" class="space-y-6">
                 <input type="hidden" name="formType" value="expense">
@@ -161,9 +161,15 @@
                         <option value="Otros">Otros</option>
                     </select>
                 </div>
-                <div>
-                    <label for="valorGasto" class="block text-sm font-medium text-slate-700 mb-1">Valor del Gasto Total (IVA Incluido):</label>
-                    <input type="number" id="valorGasto" name="valorGasto" required step="0.01" min="0" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: 50.75">
+                <div class="grid grid-cols-3 gap-4 items-end">
+                     <div class="col-span-2">
+                        <label for="valorGasto" class="block text-sm font-medium text-slate-700 mb-1">Valor del Gasto:</label>
+                        <input type="number" id="valorGasto" name="valorGasto" required step="0.01" min="0" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: 50.75">
+                    </div>
+                     <div class="col-span-1 flex items-center pb-3">
+                        <input type="checkbox" id="gastoIncluyeIVA" name="gastoIncluyeIVA" checked class="h-4 w-4 text-sky-600 border-slate-300 rounded focus:ring-sky-500">
+                        <label for="gastoIncluyeIVA" class="ml-2 text-sm text-slate-700">Incluye IVA</label>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Método de Pago:</label>
@@ -180,7 +186,7 @@
             </form>
         </div>
 
-        <!-- PESTAÑA DE ETIQUETAS (RESTAURADA) -->
+        <!-- PESTAÑA DE ETIQUETAS -->
         <div id="labelsContent" class="hidden">
             <p class="text-slate-600 mb-6">Completa los campos para crear una nueva etiqueta y agrégala a la hoja de impresión.</p>
             <form id="label-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -276,7 +282,7 @@
         // Formularios
         const inventoryForm = document.getElementById('inventoryForm');
         const expenseForm = document.getElementById('expenseForm');
-        const labelForm = document.getElementById('label-form'); // Restaurado
+        const labelForm = document.getElementById('label-form');
 
         // Elementos de Inventario
         const movementRadios = document.querySelectorAll('input[name="tipoMovimiento"]');
@@ -286,7 +292,7 @@
         const addProductBtn = document.getElementById('addProductBtn');
         const saleTotalEl = document.getElementById('saleTotal');
 
-        // Elementos de Etiquetas (Restaurado)
+        // Elementos de Etiquetas
         const labelsContainer = document.getElementById('labels-container');
         const printBtn = document.getElementById('print-btn');
         const clearBtn = document.getElementById('clear-btn');
@@ -313,7 +319,7 @@
             });
             messageDiv.textContent = '';
             messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm';
-            actionButtons.classList.toggle('hidden', activeTab !== 'labels'); // Muestra/oculta botones de etiquetas
+            actionButtons.classList.toggle('hidden', activeTab !== 'labels');
         }
 
         function toggleInventoryForms() {
@@ -384,7 +390,6 @@
             saleTotalEl.textContent = `$${total.toFixed(2)}`;
         }
         
-        // Función para añadir productos en la pestaña de etiquetas (Restaurado)
         function addLabelProductLine() {
             const newProductEntry = document.createElement('div');
             newProductEntry.className = 'label-product-entry grid grid-cols-12 gap-2 items-center';
@@ -413,39 +418,48 @@
         
         async function handleFormSubmit(e) {
             e.preventDefault();
+            
+            // Ignorar submit si proviene del formulario de etiquetas
+            if (e.target.id === 'label-form') return; 
+
             loader.style.display = 'block';
             messageDiv.textContent = '';
             messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm';
             
             const formElement = e.target;
             const formData = new FormData(formElement);
-            let data;
+            let data = { formType: formElement.id.replace('Form', '') }; // 'inventory' or 'expense'
             
-            if(formElement.id === 'inventoryForm' && formData.get('tipoMovimiento') === 'Venta') {
-                const productLines = document.querySelectorAll('#productLines .product-line');
-                const productos = Array.from(productLines).map(line => ({
-                    producto: line.querySelector('select[name="producto"]').value,
-                    cantidad: line.querySelector('input[name="cantidad"]').value,
-                    precioUnitario: line.querySelector('input[name="precioUnitario"]').value,
-                    incluyeIVA: line.querySelector('input[name="incluyeIVA"]').checked,
-                }));
+            if(data.formType === 'inventory') {
+                 data.tipoMovimiento = formData.get('tipoMovimiento');
+                 if (data.tipoMovimiento === 'Venta') {
+                    const productLines = document.querySelectorAll('#productLines .product-line');
+                    const productos = Array.from(productLines).map(line => ({
+                        producto: line.querySelector('select[name="producto"]').value,
+                        cantidad: line.querySelector('input[name="cantidad"]').value,
+                        precioUnitario: line.querySelector('input[name="precioUnitario"]').value,
+                        incluyeIVA: line.querySelector('input[name="incluyeIVA"]').checked,
+                    }));
 
-                if (productos.some(p => !p.producto || !p.cantidad || !p.precioUnitario)) {
-                    showMessage('Por favor, complete todos los campos de producto.', 'error');
-                    loader.style.display = 'none';
-                    return;
-                }
-
-                data = {
-                    formType: 'inventory',
-                    tipoMovimiento: 'Venta',
-                    esMuestra: formData.get('esMuestra') === 'on',
-                    numeroFactura: formData.get('numeroFactura'),
-                    descripcionVenta: formData.get('descripcionVenta'),
-                    productos: productos
-                };
-            } else {
-                 data = { formType: formElement.id === 'inventoryForm' ? 'inventory' : 'expense', ...Object.fromEntries(formData.entries()) };
+                    if (productos.some(p => !p.producto || !p.cantidad || !p.precioUnitario)) {
+                        showMessage('Por favor, complete todos los campos de producto.', 'error');
+                        loader.style.display = 'none';
+                        return;
+                    }
+                    data.esMuestra = formData.get('esMuestra') === 'on';
+                    data.numeroFactura = formData.get('numeroFactura');
+                    data.descripcionVenta = formData.get('descripcionVenta');
+                    data.productos = productos;
+                 } else { // Ingreso
+                     data.producto = formData.get('producto');
+                     data.cantidad = formData.get('cantidad');
+                 }
+            } else if (data.formType === 'expense') {
+                 data.tipoGasto = formData.get('tipoGasto');
+                 data.valorGasto = formData.get('valorGasto');
+                 data.gastoIncluyeIVA = formData.get('gastoIncluyeIVA') === 'on'; // Añadido
+                 data.metodoPago = formData.get('metodoPago');
+                 data.descripcionGasto = formData.get('descripcionGasto');
             }
 
             try {
@@ -463,7 +477,10 @@
                          addProductLine();
                          updateSaleTotal();
                     }
-                    toggleInventoryForms();
+                    toggleInventoryForms(); // Asegura volver al estado inicial (Ingreso)
+                    const stockDisplayIngreso = document.getElementById('stockIngreso');
+                    if(stockDisplayIngreso) stockDisplayIngreso.textContent = '';
+
                 } else {
                     let errorMessage = result.error || 'Error desconocido.';
                     if (result.error === 'STOCK_INSUFICIENTE') {
@@ -472,7 +489,8 @@
                     showMessage(errorMessage, 'error');
                 }
             } catch (error) {
-                showMessage(`Error de conexión: ${error.message}.`, 'error');
+                showMessage(`Error de conexión: ${error.message}. Asegúrate que la URL del script es correcta y está desplegado. Revisa la consola para más detalles.`, 'error');
+                 console.error("Fetch error details:", error);
             } finally {
                 loader.style.display = 'none';
             }
@@ -484,7 +502,7 @@
         tabLabelsBtn.addEventListener('click', () => switchTab('labels'));
         
         inventoryForm.addEventListener('submit', handleFormSubmit);
-        if(expenseForm) expenseForm.addEventListener('submit', handleFormSubmit); // Asegurarse que expenseForm exista
+        if(expenseForm) expenseForm.addEventListener('submit', handleFormSubmit); 
         
         movementRadios.forEach(radio => radio.addEventListener('change', toggleInventoryForms));
         
@@ -503,11 +521,13 @@
             }
         });
 
+        // Event listener para stock en Ingreso
         document.getElementById('productoIngreso').addEventListener('change', (e) => {
             const stockDisplay = document.getElementById('stockIngreso');
             fetchStock(e.target.value, stockDisplay);
         });
 
+        // Event listener para stock en Venta (delegado al contenedor)
         productLinesContainer.addEventListener('change', (e) => {
             if (e.target.name === 'producto') {
                 const stockDisplay = e.target.closest('.product-line').querySelector('.stock-display');
@@ -519,7 +539,9 @@
         addLabelProductBtn.addEventListener('click', addLabelProductLine);
         labelProductsList.addEventListener('click', (event) => {
             if (event.target.classList.contains('remove-label-product-btn')) {
-                event.target.closest('.label-product-entry').remove();
+                if (labelProductsList.children.length > 1) {
+                    event.target.closest('.label-product-entry').remove();
+                }
             }
         });
 
@@ -555,8 +577,8 @@
             labelsContainer.appendChild(labelElement);
 
             labelForm.reset();
-            labelProductsList.innerHTML = '';
-            addLabelProductLine();
+            labelProductsList.innerHTML = ''; // Limpiar lista
+            addLabelProductLine(); // Añadir una línea inicial
             document.getElementById('labelName').focus();
         });
 
@@ -572,5 +594,3 @@
     </script>
 </body>
 </html>
-
-
