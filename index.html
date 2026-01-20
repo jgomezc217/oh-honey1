@@ -11,67 +11,28 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .tab-button.active { border-bottom-color: #3b82f6; color: #1e40af; font-weight: 600; }
-        .product-line .remove-product-btn, .label-product-entry .remove-label-product-btn { display: none; }
-        .product-line:not(:first-child) .remove-product-btn, .label-product-entry:not(:first-child) .remove-label-product-btn { display: inline-flex; }
+        .product-line .remove-product-btn { display: none; }
+        .product-line:not(:first-child) .remove-product-btn { display: inline-flex; }
         .stock-display { transition: opacity 0.3s; }
 
-        /* --- Estilos para la Pestaña de Etiquetas --- */
+        /* Estilos Etiquetas */
         #labels-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            padding: 1cm;
-            width: 100%;
-            max-width: 21cm;
-            min-height: 29.7cm;
-            background-color: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            margin: 2rem auto;
-            border-radius: 8px;
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 1cm;
+            width: 100%; max-width: 21cm; min-height: 29.7cm; background-color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 2rem auto; border-radius: 8px;
         }
-        .label {
-            border: 1px dashed #9ca3af;
-            padding: 12px;
-            border-radius: 8px;
-            overflow-wrap: break-word;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            font-size: 0.75rem;
-            line-height: 1.4;
-        }
+        .label { border: 1px dashed #9ca3af; padding: 12px; border-radius: 8px; overflow-wrap: break-word; display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; line-height: 1.4; }
         .label p, .label div { margin: 0; }
         .label strong { font-weight: 600; color: #1f2937; }
 
         @media print {
-            @page {
-                size: auto;
-                margin: 0.5cm;
-            }
-            body {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-                background-color: #ffffff !important;
-            }
-            #main-form-container, .non-printable {
-                display: none !important;
-            }
-            #print-area, #labels-container {
-                margin: 0; padding: 0; width: 100%; min-height: 0;
-                box-shadow: none; border: none; border-radius: 0;
-                background-color: transparent !important;
-            }
-            .label {
-                page-break-inside: avoid;
-                border: 1px solid #6b7280;
-            }
+            @page { size: auto; margin: 0.5cm; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: #ffffff !important; }
+            #main-form-container, .non-printable { display: none !important; }
+            #print-area, #labels-container { margin: 0; padding: 0; width: 100%; min-height: 0; box-shadow: none; border: none; border-radius: 0; background-color: transparent !important; }
+            .label { page-break-inside: avoid; border: 1px solid #6b7280; }
         }
-
-        @media (max-width: 768px) {
-            #labels-container {
-                min-height: auto; padding: 1rem;
-            }
-        }
+        @media (max-width: 768px) { #labels-container { min-height: auto; padding: 1rem; } }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen p-4">
@@ -94,13 +55,43 @@
             <form id="inventoryForm">
                 <input type="hidden" name="formType" value="inventory">
                 <div class="space-y-6">
+                    <!-- Selección de Tipo de Movimiento (Radio Buttons) -->
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-2">Tipo de Movimiento:</label>
-                        <div class="flex items-center space-x-4">
-                            <label class="flex items-center"><input type="radio" name="tipoMovimiento" value="Ingreso" required checked class="h-4 w-4 text-sky-600 border-slate-300 focus:ring-sky-500"><span class="ml-2 text-slate-700">Ingreso</span></label>
-                            <label class="flex items-center"><input type="radio" name="tipoMovimiento" value="Venta" required class="h-4 w-4 text-sky-600 border-slate-300 focus:ring-sky-500"><span class="ml-2 text-slate-700">Venta</span></label>
+                        <label class="block text-sm font-medium text-slate-700 mb-3">Tipo de Operación:</label>
+                        <div class="flex flex-wrap gap-4">
+                            <label class="inline-flex items-center cursor-pointer bg-white border border-slate-200 rounded-lg p-3 hover:bg-slate-50 transition-colors shadow-sm w-full sm:w-auto">
+                                <input type="radio" name="mainMovementType" value="Ingreso" class="form-radio h-5 w-5 text-sky-600 focus:ring-sky-500" checked>
+                                <span class="ml-2 text-slate-700 font-medium">Ingreso</span>
+                            </label>
+                            <label class="inline-flex items-center cursor-pointer bg-white border border-slate-200 rounded-lg p-3 hover:bg-slate-50 transition-colors shadow-sm w-full sm:w-auto">
+                                <input type="radio" name="mainMovementType" value="Venta" class="form-radio h-5 w-5 text-sky-600 focus:ring-sky-500">
+                                <span class="ml-2 text-slate-700 font-medium">Venta</span>
+                            </label>
+                            <label class="inline-flex items-center cursor-pointer bg-white border border-slate-200 rounded-lg p-3 hover:bg-slate-50 transition-colors shadow-sm w-full sm:w-auto">
+                                <input type="radio" name="mainMovementType" value="Consigna" class="form-radio h-5 w-5 text-sky-600 focus:ring-sky-500">
+                                <span class="ml-2 text-slate-700 font-medium">Consigna</span>
+                            </label>
                         </div>
                     </div>
+
+                    <!-- Sub-opciones de Consignación (Ocultas por defecto) -->
+                    <div id="consignaOptions" class="hidden bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-2">
+                        <p class="text-sm font-semibold text-blue-800 mb-2">Seleccione el tipo de consignación:</p>
+                        <label class="flex items-center cursor-pointer p-2 rounded hover:bg-blue-100">
+                            <input type="radio" name="consignaType" value="ConsignacionSalida" class="form-radio h-4 w-4 text-blue-600 focus:ring-blue-500" checked>
+                            <span class="ml-2 text-sm text-blue-900">Salida de Producto (Entrega)</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer p-2 rounded hover:bg-blue-100">
+                            <input type="radio" name="consignaType" value="LiquidacionConsignacion" class="form-radio h-4 w-4 text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-blue-900">Liquidación (Cobro de Ventas)</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer p-2 rounded hover:bg-blue-100">
+                            <input type="radio" name="consignaType" value="DevolucionConsignacion" class="form-radio h-4 w-4 text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-blue-900">Devolución (Retorno al Stock)</span>
+                        </label>
+                    </div>
+
+                    <!-- Campos Ingreso (Simple) -->
                     <div id="formIngreso" class="space-y-4">
                         <div>
                             <label for="productoIngreso" class="block text-sm font-medium text-slate-700 mb-1">Producto:</label>
@@ -114,21 +105,23 @@
                             <input type="number" id="cantidadIngreso" name="cantidad" min="1" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: 10">
                         </div>
                     </div>
+
+                    <!-- Campos Venta / Consignación (Múltiple) -->
                     <div id="formVenta" class="hidden space-y-6">
                          <!-- Fila 1: Factura y Muestra -->
                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
                             <div>
-                               <label for="numeroFactura" class="block text-sm font-medium text-slate-700 mb-1">Número de Factura:</label>
-                               <input type="text" id="numeroFactura" name="numeroFactura" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: 001-001-0001234">
+                               <label for="numeroFactura" class="block text-sm font-medium text-slate-700 mb-1" id="lblFactura">Referencia / Factura:</label>
+                               <input type="text" id="numeroFactura" name="numeroFactura" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: Factura 001 o Nombre Empresa">
                            </div>
-                           <div class="flex items-center pt-6">
+                           <div class="flex items-center pt-6" id="divMuestra">
                                <input type="checkbox" id="esMuestra" name="esMuestra" class="h-5 w-5 text-sky-600 border-slate-300 rounded focus:ring-sky-500">
                                <label for="esMuestra" class="ml-2 block text-sm font-medium text-slate-700">Registrar como Muestra (sin venta)</label>
                            </div>
                         </div>
 
-                        <!-- Fila 2: Configuración POS -->
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <!-- Fila 2: Configuración POS (Solo visible para Venta y Liquidación) -->
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200" id="containerPOS">
                             <div class="flex items-center mb-2">
                                 <input type="checkbox" id="pagoConPOS" name="pagoConPOS" class="h-5 w-5 text-sky-600 border-slate-300 rounded focus:ring-sky-500">
                                 <label for="pagoConPOS" class="ml-2 block text-sm font-medium text-slate-700">Venta con POS (Comisión)</label>
@@ -143,8 +136,8 @@
                             </div>
                         </div>
                         
-                        <!-- Fila 3: Delivery -->
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <!-- Fila 3: Delivery (Solo visible para Venta y Liquidación) -->
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200" id="containerDelivery">
                             <div class="flex items-center mb-2">
                                 <input type="checkbox" id="incluyeDelivery" name="incluyeDelivery" class="h-5 w-5 text-sky-600 border-slate-300 rounded focus:ring-sky-500">
                                 <label for="incluyeDelivery" class="ml-2 block text-sm font-medium text-slate-700">Incluir Delivery</label>
@@ -163,13 +156,13 @@
                         <div class="flex justify-between items-center">
                             <button type="button" id="addProductBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg shadow-sm">+ Añadir Producto</button>
                             <div class="text-right">
-                                <p class="text-slate-600">Total Productos:</p>
+                                <p class="text-slate-600">Total:</p>
                                 <p id="saleTotal" class="text-2xl font-bold text-slate-800">$0.00</p>
                             </div>
                         </div>
                         <div>
                             <label for="descripcionVenta" class="block text-sm font-medium text-slate-700 mb-1">Descripción:</label>
-                            <textarea id="descripcionVenta" name="descripcionVenta" rows="2" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: Venta a cliente minorista"></textarea>
+                            <textarea id="descripcionVenta" name="descripcionVenta" rows="2" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Detalles de la transacción"></textarea>
                         </div>
                     </div>
                 </div>
@@ -262,7 +255,6 @@
             </form>
         </div>
 
-        <!-- Mensaje de estado -->
         <div class="flex items-center justify-end space-x-3 mt-6">
             <div id="loader" class="loader"></div>
             <div id="message" class="flex-grow p-4 rounded-lg text-center text-sm" role="alert"></div>
@@ -300,11 +292,9 @@
     <script>
         // --- 1. CONSTANTES Y REFERENCIAS A ELEMENTOS DEL DOM ---
         const FULL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMapJvU3t9B7c0sfZIQRJbjPZpqjVVQCF9gsJrQd4evSVDCeNnPKlRfdkPLoxkZE8JyA/exec';
-        
-        // Plantillas
         const productOptionsTemplate = document.getElementById('productOptionsTemplate');
 
-        // Pestañas y Contenidos
+        // Pestañas
         const tabInventoryBtn = document.getElementById('tabInventoryBtn');
         const tabExpenseBtn = document.getElementById('tabExpenseBtn');
         const tabLabelsBtn = document.getElementById('tabLabelsBtn');
@@ -317,8 +307,11 @@
         const expenseForm = document.getElementById('expenseForm');
         const labelForm = document.getElementById('label-form');
 
-        // Elementos de Inventario
-        const movementRadios = document.querySelectorAll('input[name="tipoMovimiento"]');
+        // Elementos Inventario
+        const radiosMovement = document.getElementsByName('mainMovementType');
+        const radiosConsigna = document.getElementsByName('consignaType');
+        const consignaOptionsDiv = document.getElementById('consignaOptions');
+        
         const formIngreso = document.getElementById('formIngreso');
         const formVenta = document.getElementById('formVenta');
         const productLinesContainer = document.getElementById('productLines'); 
@@ -328,8 +321,12 @@
         const posFields = document.getElementById('posFields');
         const incluyeDeliveryCheckbox = document.getElementById('incluyeDelivery');
         const deliveryFields = document.getElementById('deliveryFields');
-        
-        // Etiquetas
+        const containerPOS = document.getElementById('containerPOS');
+        const containerDelivery = document.getElementById('containerDelivery');
+        const divMuestra = document.getElementById('divMuestra');
+        const lblFactura = document.getElementById('lblFactura');
+
+        // Elementos Etiquetas
         const labelsContainer = document.getElementById('labels-container');
         const printBtn = document.getElementById('print-btn');
         const clearBtn = document.getElementById('clear-btn');
@@ -337,7 +334,6 @@
         const labelProductsList = document.getElementById('label-products-list');
         const actionButtons = document.getElementById('action-buttons');
 
-        // Elementos Comunes
         const loader = document.getElementById('loader');
         const messageDiv = document.getElementById('message');
 
@@ -347,7 +343,6 @@
             messageDiv.textContent = ''; messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm';
             const tabs = { inventory: tabInventoryBtn, expense: tabExpenseBtn, labels: tabLabelsBtn };
             const contents = { inventory: inventoryContent, expense: expenseContent, labels: labelsContent };
-
             for (const key in tabs) {
                 const isActive = key === activeTab;
                 tabs[key].classList.toggle('active', isActive);
@@ -357,21 +352,65 @@
             actionButtons.classList.toggle('hidden', activeTab !== 'labels');
         }
 
+        function getSelectedMovement() {
+            const mainType = document.querySelector('input[name="mainMovementType"]:checked').value;
+            if (mainType === 'Consigna') {
+                return document.querySelector('input[name="consignaType"]:checked').value;
+            }
+            return mainType;
+        }
+
         function toggleInventoryForms() {
-            const selectedValue = document.querySelector('input[name="tipoMovimiento"]:checked').value;
-            formVenta.classList.toggle('hidden', selectedValue !== 'Venta');
-            formIngreso.classList.toggle('hidden', selectedValue === 'Venta');
-            if (selectedValue === 'Venta' && productLinesContainer.children.length === 0) {
-                addProductLine();
+            const movType = getSelectedMovement();
+            const mainType = document.querySelector('input[name="mainMovementType"]:checked').value;
+            
+            // Mostrar/Ocultar submenú de Consigna
+            consignaOptionsDiv.classList.toggle('hidden', mainType !== 'Consigna');
+
+            const isIngreso = movType === 'Ingreso';
+            const isVentaType = ['Venta', 'LiquidacionConsignacion'].includes(movType);
+            const isConsignaSalida = movType === 'ConsignacionSalida';
+            
+            formIngreso.classList.toggle('hidden', !isIngreso);
+            formVenta.classList.toggle('hidden', isIngreso);
+
+            if (!isIngreso) {
+                if (productLinesContainer.children.length === 0) {
+                    addProductLine();
+                }
+                
+                // Configurar visibilidad y campos
+                const canHaveMoney = isVentaType;
+                containerPOS.classList.toggle('hidden', !canHaveMoney);
+                containerDelivery.classList.toggle('hidden', !canHaveMoney);
+                divMuestra.classList.toggle('hidden', movType !== 'Venta');
+
+                // Ajustar etiqueta de Factura
+                if (isConsignaSalida || movType === 'DevolucionConsignacion') {
+                    lblFactura.textContent = "Empresa / Cliente:";
+                    document.getElementById('numeroFactura').placeholder = "Nombre del Cliente";
+                } else {
+                    lblFactura.textContent = "Número de Factura:";
+                    document.getElementById('numeroFactura').placeholder = "Ej: Factura 001";
+                }
+
+                // Opcional: Ocultar columnas de precio si es salida/devolución consigna
+                const productLines = document.querySelectorAll('.product-line');
+                productLines.forEach(line => {
+                    const priceInputs = line.querySelectorAll('.price-field');
+                    priceInputs.forEach(el => el.style.visibility = canHaveMoney ? 'visible' : 'hidden');
+                });
             }
         }
         
-        // Toggle POS fields
+        // Listeners para cambio de tipo
+        radiosMovement.forEach(r => r.addEventListener('change', toggleInventoryForms));
+        radiosConsigna.forEach(r => r.addEventListener('change', toggleInventoryForms));
+
         pagoConPOSCheckbox.addEventListener('change', () => {
             posFields.classList.toggle('hidden', !pagoConPOSCheckbox.checked);
         });
 
-        // Toggle Delivery fields
         incluyeDeliveryCheckbox.addEventListener('change', () => {
             deliveryFields.classList.toggle('hidden', !incluyeDeliveryCheckbox.checked);
         });
@@ -379,17 +418,25 @@
         function addProductLine() {
             const lineDiv = document.createElement('div');
             lineDiv.className = 'product-line grid grid-cols-12 gap-x-2 gap-y-3 items-start border-t pt-3';
+            
+            // Check visibility for new lines
+            const movType = getSelectedMovement();
+            const canHaveMoney = ['Venta', 'LiquidacionConsignacion'].includes(movType);
+            const visibilityClass = canHaveMoney ? '' : 'invisible';
+
             lineDiv.innerHTML = `
                 <div class="col-span-12 sm:col-span-4">
                     <select name="producto" class="w-full p-2 border border-slate-300 rounded-md shadow-sm">${productOptionsTemplate.innerHTML}</select>
                     <div class="stock-display text-right text-sm text-slate-500 font-semibold h-5 mt-1 pr-1"></div>
                 </div>
                 <div class="col-span-4 sm:col-span-2"><input type="number" name="cantidad" min="1" placeholder="Cant." class="w-full p-2 border border-slate-300 rounded-md shadow-sm"></div>
-                <div class="col-span-8 sm:col-span-2"><input type="number" name="precioUnitario" step="0.01" min="0" placeholder="P. Unit." class="w-full p-2 border border-slate-300 rounded-md shadow-sm"></div>
-                <div class="col-span-8 sm:col-span-3"><input type="text" name="subtotal" readonly class="w-full p-2 bg-slate-100 border-slate-300 rounded-md text-right font-medium" value="$0.00"></div>
+                <div class="col-span-8 sm:col-span-2 price-field ${visibilityClass}"><input type="number" name="precioUnitario" step="0.01" min="0" placeholder="P. Unit." class="w-full p-2 border border-slate-300 rounded-md shadow-sm"></div>
+                <div class="col-span-8 sm:col-span-3 price-field ${visibilityClass}"><input type="text" name="subtotal" readonly class="w-full p-2 bg-slate-100 border-slate-300 rounded-md text-right font-medium" value="$0.00"></div>
                 <div class="col-span-4 sm:col-span-1 flex items-center justify-end space-x-2">
-                    <input type="checkbox" name="incluyeIVA" checked class="h-4 w-4 text-sky-600 border-slate-300 rounded focus:ring-sky-500">
-                    <label class="text-xs text-slate-500">IVA</label>
+                    <div class="price-field ${visibilityClass} flex flex-col items-center mr-2">
+                        <input type="checkbox" name="incluyeIVA" checked class="h-4 w-4 text-sky-600 border-slate-300 rounded">
+                        <label class="text-[10px] text-slate-500">IVA</label>
+                    </div>
                     <button type="button" class="remove-product-btn text-red-500 hover:text-red-700 font-bold p-1 rounded-full leading-none flex items-center justify-center h-6 w-6">✕</button>
                 </div>`;
             productLinesContainer.appendChild(lineDiv);
@@ -415,19 +462,14 @@
         }
         
         async function fetchStock(productName, displayElement) {
-            if (!productName) {
-                displayElement.textContent = '';
-                return;
-            }
+            if (!productName) { displayElement.textContent = ''; return; }
             displayElement.textContent = '...';
             try {
                 const response = await fetch(`${FULL_SCRIPT_URL}?action=getStock&producto=${encodeURIComponent(productName)}`);
                 if (!response.ok) throw new Error('Err');
                 const result = await response.json();
                 displayElement.textContent = result.success ? `Stock: ${result.stock}` : 'Stock: 0';
-            } catch (error) {
-                displayElement.textContent = 'Err Stock';
-            }
+            } catch (error) { displayElement.textContent = 'Err Stock'; }
         }
         
         document.getElementById('productoIngreso').addEventListener('change', (e) => {
@@ -441,20 +483,19 @@
         
         async function handleFormSubmit(e) {
             e.preventDefault();
-            
             if (e.target.id === 'label-form') return; 
 
             loader.style.display = 'block';
-            messageDiv.textContent = '';
-            messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm';
+            messageDiv.textContent = ''; messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm';
             
             const formElement = e.target;
             const formData = new FormData(formElement);
             let data = { formType: formElement.id.replace('Form', '') };
             
             if(data.formType === 'inventory') {
-                 data.tipoMovimiento = formData.get('tipoMovimiento');
-                 if (data.tipoMovimiento === 'Venta') {
+                 data.tipoMovimiento = getSelectedMovement();
+                 
+                 if (data.tipoMovimiento !== 'Ingreso') {
                     const productLines = document.querySelectorAll('#productLines .product-line');
                     const productos = Array.from(productLines).map(line => ({
                         producto: line.querySelector('select[name="producto"]').value,
@@ -462,13 +503,10 @@
                         precioUnitario: line.querySelector('input[name="precioUnitario"]').value,
                         incluyeIVA: line.querySelector('input[name="incluyeIVA"]').checked,
                     }));
-
-                    if (productos.some(p => !p.producto || !p.cantidad || !p.precioUnitario)) {
-                        showMessage('Por favor, complete todos los campos de producto.', 'error');
-                        loader.style.display = 'none';
-                        return;
+                    if (productos.some(p => !p.producto || !p.cantidad)) {
+                        showMessage('Complete productos y cantidades.', 'error');
+                        loader.style.display = 'none'; return;
                     }
-
                     data.esMuestra = formData.get('esMuestra') === 'on';
                     data.pagoConPOS = formData.get('pagoConPOS') === 'on';
                     data.comisionPOS = formData.get('comisionPOS');
@@ -497,13 +535,15 @@
                 if (result.success) {
                     showMessage(result.message || '¡Operación registrada!', 'success');
                     formElement.reset();
-                    if(formElement.id === 'inventoryForm' && data.tipoMovimiento === 'Venta') {
+                    if(formElement.id === 'inventoryForm' && data.tipoMovimiento !== 'Ingreso') {
                          productLinesContainer.innerHTML = '';
                          addProductLine();
                          updateSaleTotal();
                          posFields.classList.add('hidden');
                          deliveryFields.classList.add('hidden');
                     }
+                    // Resetear el estado de los radios a Ingreso por defecto
+                    document.querySelector('input[name="mainMovementType"][value="Ingreso"]').checked = true;
                     toggleInventoryForms();
                     document.getElementById('stockIngreso').textContent = '';
                 } else {
@@ -513,38 +553,25 @@
                      }
                     showMessage(errorMessage, 'error');
                 }
-            } catch (error) {
-                showMessage(`Error de conexión: ${error.message}`, 'error');
-            } finally {
-                loader.style.display = 'none';
-            }
+            } catch (error) { showMessage(`Error de conexión: ${error.message}`, 'error'); } 
+            finally { loader.style.display = 'none'; }
         }
         
-        // ... [Funciones de Etiquetas] ...
+        // ... (Funciones de Etiquetas: addLabelProductLine, showMessage, etc. se mantienen igual) ...
         function addLabelProductLine() {
             const newProductEntry = document.createElement('div');
             newProductEntry.className = 'label-product-entry grid grid-cols-12 gap-2 items-center';
             newProductEntry.innerHTML = `
-                <div class="col-span-3">
-                    <input type="number" name="quantity" value="1" min="1" placeholder="Cant." required class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm">
-                </div>
-                <div class="col-span-8">
-                    <select name="product" required class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm">${productOptionsTemplate.innerHTML}</select>
-                </div>
-                <div class="col-span-1 text-center">
-                    <button type="button" class="remove-label-product-btn text-red-500 hover:text-red-700 font-bold text-xl">&times;</button>
-                </div>
-            `;
+                <div class="col-span-3"><input type="number" name="quantity" value="1" min="1" placeholder="Cant." required class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm"></div>
+                <div class="col-span-8"><select name="product" required class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm">${productOptionsTemplate.innerHTML}</select></div>
+                <div class="col-span-1 text-center"><button type="button" class="remove-label-product-btn text-red-500 hover:text-red-700 font-bold text-xl">&times;</button></div>`;
             labelProductsList.appendChild(newProductEntry);
         }
 
         function showMessage(msg, type) {
             messageDiv.textContent = msg;
-            if (type === 'success') {
-                messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm bg-green-100 text-green-800';
-            } else if (type === 'error') {
-                messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm bg-red-100 text-red-800';
-            }
+            if (type === 'success') messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm bg-green-100 text-green-800';
+            else if (type === 'error') messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm bg-red-100 text-red-800';
         }
 
         // --- 3. EVENT LISTENERS E INICIALIZACIÓN ---
@@ -554,8 +581,6 @@
         
         inventoryForm.addEventListener('submit', handleFormSubmit);
         if(expenseForm) expenseForm.addEventListener('submit', handleFormSubmit);
-        
-        movementRadios.forEach(radio => radio.addEventListener('change', toggleInventoryForms));
         
         addProductBtn.addEventListener('click', addProductLine);
         
@@ -572,11 +597,10 @@
             }
         });
 
-        // Event Listeners para Etiquetas
         addLabelProductBtn.addEventListener('click', addLabelProductLine);
         labelProductsList.addEventListener('click', (event) => {
-            if (event.target.classList.contains('remove-label-product-btn')) {
-                if(labelProductsList.children.length > 1) event.target.closest('.label-product-entry').remove();
+            if (event.target.classList.contains('remove-label-product-btn') && labelProductsList.children.length > 1) {
+                event.target.closest('.label-product-entry').remove();
             }
         });
 
@@ -593,9 +617,7 @@
             productEntries.forEach(entry => {
                 const quantity = entry.querySelector('input[name="quantity"]').value;
                 const product = entry.querySelector('select[name="product"]').value;
-                if (product.trim()) {
-                    productsHTML += `<li>${quantity} x ${product}</li>`;
-                }
+                if (product.trim()) productsHTML += `<li>${quantity} x ${product}</li>`;
             });
             productsHTML += '</ul>';
 
@@ -610,17 +632,14 @@
                 <p class="mt-2 pt-2 border-t border-slate-200"><strong>Método de Pago:</strong> ${paymentMethod}</p>
             `;
             labelsContainer.appendChild(labelElement);
-
             labelForm.reset();
-            labelProductsList.innerHTML = '';
-            addLabelProductLine();
+            labelProductsList.innerHTML = ''; addLabelProductLine();
             document.getElementById('labelName').focus();
         });
-
         printBtn.addEventListener('click', () => window.print());
         clearBtn.addEventListener('click', () => labelsContainer.innerHTML = '');
 
-        // --- INICIALIZACIÓN GENERAL ---
+        // --- INICIALIZACIÓN ---
         document.getElementById('productoIngreso').innerHTML = productOptionsTemplate.innerHTML;
         addLabelProductLine(); 
         toggleInventoryForms();
