@@ -13,6 +13,13 @@
         .tab-button.active { border-bottom-color: #3b82f6; color: #1e40af; font-weight: 600; }
         .product-line .remove-product-btn { display: none; }
         .product-line:not(:first-child) .remove-product-btn { display: inline-flex; }
+        /* Estilos etiquetas */
+        #labels-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 1cm; width: 100%; max-width: 21cm; min-height: 29.7cm; background-color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 2rem auto; border-radius: 8px; }
+        .label { border: 1px dashed #9ca3af; padding: 12px; border-radius: 8px; overflow-wrap: break-word; display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; line-height: 1.4; }
+        .label p, .label div { margin: 0; }
+        .label strong { font-weight: 600; color: #1f2937; }
+        @media print { @page { size: auto; margin: 0.5cm; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: #ffffff !important; } #main-form-container, .non-printable { display: none !important; } #print-area, #labels-container { margin: 0; padding: 0; width: 100%; min-height: 0; box-shadow: none; border: none; border-radius: 0; background-color: transparent !important; } .label { page-break-inside: avoid; border: 1px solid #6b7280; } }
+        @media (max-width: 768px) { #labels-container { min-height: auto; padding: 1rem; } }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen p-4">
@@ -22,19 +29,20 @@
             <h1 class="text-3xl md:text-4xl font-bold text-slate-700">🍯 Control de Negocio</h1>
         </header>
 
-        <div class="border-b border-slate-200 mb-6">
-            <nav class="flex flex-wrap -mb-px space-x-4">
+        <div class="border-b border-slate-200 mb-6 overflow-x-auto">
+            <nav class="flex -mb-px space-x-4 min-w-max">
                 <button id="tabInventoryBtn" class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Movimientos</button>
                 <button id="tabExpenseBtn" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700">Gastos</button>
+                <button id="tabClientsBtn" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700">Comercios</button>
                 <button id="tabLabelsBtn" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700">Etiquetas</button>
             </nav>
         </div>
 
+        <!-- PESTAÑA INVENTARIO -->
         <div id="inventoryContent">
             <form id="inventoryForm">
                 <input type="hidden" name="formType" value="inventory">
                 <div class="space-y-6">
-                    <!-- Selección de Tipo de Movimiento -->
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-3">Tipo de Operación:</label>
                         <div class="flex flex-wrap gap-4">
@@ -48,16 +56,24 @@
                             </label>
                             <label class="inline-flex items-center cursor-pointer bg-white border border-slate-200 rounded-lg p-3 hover:bg-slate-50 transition-colors shadow-sm w-full sm:w-auto">
                                 <input type="radio" name="mainMovementType" value="ConsignacionSalida" class="form-radio h-5 w-5 text-sky-600 focus:ring-sky-500">
-                                <span class="ml-2 text-slate-700 font-medium">Salida a Consigna</span>
+                                <span class="ml-2 text-slate-700 font-medium">Consigna</span>
                             </label>
                             <label class="inline-flex items-center cursor-pointer bg-white border border-slate-200 rounded-lg p-3 hover:bg-slate-50 transition-colors shadow-sm w-full sm:w-auto">
                                 <input type="radio" name="mainMovementType" value="GestionarConsigna" class="form-radio h-5 w-5 text-sky-600 focus:ring-sky-500">
-                                <span class="ml-2 text-slate-700 font-medium">Gestionar Consigna</span>
+                                <span class="ml-2 text-slate-700 font-medium">Gestión</span>
                             </label>
                         </div>
                     </div>
 
-                    <!-- 1. Formulario Ingreso -->
+                    <!-- Sub-opciones Consigna -->
+                    <div id="consignaOptions" class="hidden bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-2">
+                        <p class="text-sm font-semibold text-blue-800 mb-2">Seleccione:</p>
+                        <label class="flex items-center"><input type="radio" name="consignaType" value="ConsignacionSalida" class="form-radio h-4 w-4 text-blue-600" checked><span class="ml-2 text-sm">Salida de Producto</span></label>
+                        <label class="flex items-center"><input type="radio" name="consignaType" value="LiquidacionConsignacion" class="form-radio h-4 w-4 text-blue-600"><span class="ml-2 text-sm">Liquidación</span></label>
+                        <label class="flex items-center"><input type="radio" name="consignaType" value="DevolucionConsignacion" class="form-radio h-4 w-4 text-blue-600"><span class="ml-2 text-sm">Devolución</span></label>
+                    </div>
+
+                    <!-- Form Ingreso -->
                     <div id="formIngreso" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Producto:</label>
@@ -66,126 +82,81 @@
                                 <div id="stockIngreso" class="text-right text-sm text-slate-500 font-semibold h-5 mt-1 pr-1 w-24"></div>
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Cantidad:</label>
-                            <input type="number" id="cantidadIngreso" name="cantidad" min="1" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: 10">
-                        </div>
+                        <div><label class="block text-sm font-medium text-slate-700 mb-1">Cantidad:</label><input type="number" id="cantidadIngreso" name="cantidad" min="1" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: 10"></div>
                     </div>
 
-                    <!-- 2. Formulario Venta / Salida Consigna -->
+                    <!-- Form Venta -->
                     <div id="formVenta" class="hidden space-y-6">
-                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                            <div>
-                               <label for="numeroFactura" class="block text-sm font-medium text-slate-700 mb-1" id="lblFactura">Factura / Cliente:</label>
-                               <input type="text" id="numeroFactura" name="numeroFactura" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: Factura 001">
-                           </div>
-                           <div class="flex items-center pt-6" id="divMuestra">
-                               <input type="checkbox" id="esMuestra" name="esMuestra" class="h-5 w-5 text-sky-600 border-slate-300 rounded focus:ring-sky-500">
-                               <label for="esMuestra" class="ml-2 block text-sm font-medium text-slate-700">Es Muestra (sin cobro)</label>
-                           </div>
+                        <!-- Selección Destino Venta -->
+                        <div class="bg-yellow-50 border border-yellow-100 p-4 rounded-lg">
+                            <label class="block text-sm font-medium text-yellow-800 mb-2">Destino de la Venta:</label>
+                            <div class="flex gap-4">
+                                <label class="flex items-center cursor-pointer"><input type="radio" name="ventaDestino" value="Delivery" class="form-radio h-4 w-4 text-yellow-600" checked><span class="ml-2 text-sm text-yellow-900">Cliente Final / Delivery</span></label>
+                                <label class="flex items-center cursor-pointer"><input type="radio" name="ventaDestino" value="Comercio" class="form-radio h-4 w-4 text-yellow-600"><span class="ml-2 text-sm text-yellow-900">Comercio</span></label>
+                            </div>
                         </div>
 
-                        <!-- Configuración POS y Delivery (Solo Venta) -->
-                        <div id="containerExtrasVenta">
-                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
-                                <div class="flex items-center mb-2">
-                                    <input type="checkbox" id="pagoConPOS" name="pagoConPOS" class="h-5 w-5 text-sky-600 border-slate-300 rounded focus:ring-sky-500">
-                                    <label for="pagoConPOS" class="ml-2 block text-sm font-medium text-slate-700">Venta con POS</label>
-                                </div>
-                                <div id="posFields" class="hidden ml-7 mt-2">
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">% Comisión POS:</label>
-                                    <input type="number" id="comisionPOS" name="comisionPOS" step="0.01" min="0" max="100" class="w-32 p-2 border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-sky-500 text-sm" placeholder="Ej: 3">
+                        <!-- Info Cliente -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                            <div id="divNombreCliente">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Nombre Cliente:</label>
+                                <input type="text" id="nombreClienteDelivery" name="nombreClienteDelivery" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: Juan Pérez">
+                            </div>
+                            <div id="divComercioSelect" class="hidden">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Seleccionar Comercio:</label>
+                                <div class="flex space-x-2">
+                                    <select id="clienteComercio" name="clienteComercio" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500">
+                                        <option value="" disabled selected>Cargando...</option>
+                                    </select>
+                                    <button type="button" id="btnRefreshClients" class="text-sky-600 hover:text-sky-800 text-sm">↻</button>
                                 </div>
                             </div>
-                            
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Número de Factura:</label>
+                                <input type="text" id="numeroFactura" name="numeroFactura" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: 001-001">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center pt-2" id="divMuestra">
+                            <input type="checkbox" id="esMuestra" name="esMuestra" class="h-5 w-5 text-sky-600 border-slate-300 rounded focus:ring-sky-500">
+                            <label for="esMuestra" class="ml-2 block text-sm font-medium text-slate-700">Registrar como Muestra (sin venta)</label>
+                        </div>
+
+                        <!-- Extras -->
+                        <div id="containerExtrasVenta">
+                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
+                                <div class="flex items-center mb-2"><input type="checkbox" id="pagoConPOS" name="pagoConPOS" class="h-5 w-5 text-sky-600 rounded"><label for="pagoConPOS" class="ml-2 block text-sm font-medium text-slate-700">Venta con POS</label></div>
+                                <div id="posFields" class="hidden ml-7 mt-2"><label class="block text-sm font-medium text-slate-700 mb-1">% Comisión POS:</label><input type="number" id="comisionPOS" name="comisionPOS" step="0.01" class="w-32 p-2 border border-slate-300 rounded-md text-sm" placeholder="Ej: 3"></div>
+                            </div>
                             <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                                <div class="flex items-center mb-2">
-                                    <input type="checkbox" id="incluyeDelivery" name="incluyeDelivery" class="h-5 w-5 text-sky-600 border-slate-300 rounded focus:ring-sky-500">
-                                    <label for="incluyeDelivery" class="ml-2 block text-sm font-medium text-slate-700">Incluir Delivery</label>
-                                </div>
-                                <div id="deliveryFields" class="hidden ml-7 mt-2">
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Monto Delivery ($):</label>
-                                    <input type="number" id="montoDelivery" name="montoDelivery" step="0.01" min="0" class="w-32 p-2 border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-sky-500 text-sm" placeholder="0.00">
-                                </div>
+                                <div class="flex items-center mb-2"><input type="checkbox" id="incluyeDelivery" name="incluyeDelivery" class="h-5 w-5 text-sky-600 rounded"><label for="incluyeDelivery" class="ml-2 block text-sm font-medium text-slate-700">Incluir Delivery</label></div>
+                                <div id="deliveryFields" class="hidden ml-7 mt-2"><label class="block text-sm font-medium text-slate-700 mb-1">Monto Delivery ($):</label><input type="number" id="montoDelivery" name="montoDelivery" step="0.01" class="w-32 p-2 border border-slate-300 rounded-md text-sm" placeholder="0.00"></div>
                             </div>
                         </div>
 
                         <div id="productLines" class="space-y-4 border-t border-b border-slate-200 py-4"></div>
-                        <div class="flex justify-between items-center" id="divAddProduct">
-                            <button type="button" id="addProductBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg shadow-sm">+ Añadir Producto</button>
-                            <div class="text-right">
-                                <p class="text-slate-600">Total:</p>
-                                <p id="saleTotal" class="text-2xl font-bold text-slate-800">$0.00</p>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Descripción:</label>
-                            <textarea id="descripcionVenta" name="descripcionVenta" rows="2" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500"></textarea>
-                        </div>
+                        <div class="flex justify-between items-center" id="divAddProduct"><button type="button" id="addProductBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg shadow-sm">+ Añadir Producto</button><div class="text-right"><p class="text-slate-600">Total:</p><p id="saleTotal" class="text-2xl font-bold text-slate-800">$0.00</p></div></div>
+                        <div><label class="block text-sm font-medium text-slate-700 mb-1">Descripción:</label><textarea id="descripcionVenta" name="descripcionVenta" rows="2" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500"></textarea></div>
                     </div>
 
-                    <!-- 3. Formulario Gestionar Consigna (NUEVO) -->
+                    <!-- 3. Gestionar Consigna -->
                     <div id="formGestionConsigna" class="hidden space-y-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-semibold text-slate-700">Consignaciones Activas</h3>
-                            <button type="button" id="refreshConsignasBtn" class="text-sm text-sky-600 hover:text-sky-800">Actualizar Lista ↻</button>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Selecciona la consigna:</label>
-                            <select id="consignaSelect" name="idConsigna" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 bg-white">
-                                <option value="" disabled selected>Cargando consignas...</option>
-                            </select>
-                        </div>
-                        <div id="consignaDetails" class="hidden p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                            <p class="text-sm text-yellow-800"><strong>Producto:</strong> <span id="consProd"></span></p>
-                            <p class="text-sm text-yellow-800"><strong>Pendiente:</strong> <span id="consQty"></span> unidades</p>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Cantidad a Facturar (Venta):</label>
-                                <input type="number" id="cantVentaConsigna" name="cantVentaConsigna" min="0" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500" placeholder="0">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Cantidad a Devolver (Retorno):</label>
-                                <input type="number" id="cantDevolucionConsigna" name="cantDevolucionConsigna" min="0" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-red-500" placeholder="0">
-                            </div>
-                        </div>
-                        <!-- Campos de Precio para Facturar -->
-                        <div id="consignaPrecioFields" class="hidden bg-slate-50 p-4 rounded-lg border border-slate-200">
-                             <div class="grid grid-cols-2 gap-4 mb-3">
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Precio Unitario:</label>
-                                    <input type="number" id="precioUnitarioConsigna" name="precioUnitarioConsigna" step="0.01" min="0" class="w-full p-2 border border-slate-300 rounded-md shadow-sm">
-                                </div>
-                                <div class="flex items-center pt-6">
-                                    <input type="checkbox" id="ivaConsigna" name="incluyeIVA" checked class="h-4 w-4 text-sky-600 border-slate-300 rounded">
-                                    <label for="ivaConsigna" class="ml-2 text-sm text-slate-700">Incluye IVA</label>
-                                </div>
-                             </div>
-                             <div class="flex items-center mb-2">
-                                <input type="checkbox" id="posConsigna" name="pagoConPOS" class="h-4 w-4 text-sky-600 border-slate-300 rounded">
-                                <label for="posConsigna" class="ml-2 text-sm text-slate-700">Pago con POS</label>
-                            </div>
-                            <div id="posFieldsConsigna" class="hidden ml-6">
-                                <label class="text-sm font-medium text-slate-700">% Comisión:</label>
-                                <input type="number" id="comisionPOSConsigna" name="comisionPOS" class="w-20 p-1 border border-slate-300 rounded text-sm ml-2">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Nota:</label>
-                            <input type="text" id="descConsigna" name="descripcionVenta" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Detalle opcional">
-                        </div>
+                        <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-semibold text-slate-700">Consignaciones Activas</h3><button type="button" id="refreshConsignasBtn" class="text-sm text-sky-600 hover:text-sky-800">Actualizar ↻</button></div>
+                        <div><select id="consignaSelect" name="idConsigna" class="w-full p-3 border border-slate-300 rounded-lg"><option value="" disabled selected>Cargando...</option></select></div>
+                        <div id="consignaDetails" class="hidden p-4 bg-yellow-50 rounded-lg border border-yellow-200"><p class="text-sm text-yellow-800"><strong>Producto:</strong> <span id="consProd"></span></p><p class="text-sm text-yellow-800"><strong>Pendiente:</strong> <span id="consQty"></span> unidades</p></div>
+                        <div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-slate-700 mb-1">Facturar:</label><input type="number" id="cantVentaConsigna" name="cantVentaConsigna" min="0" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0"></div><div><label class="block text-sm font-medium text-slate-700 mb-1">Devolver:</label><input type="number" id="cantDevolucionConsigna" name="cantDevolucionConsigna" min="0" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0"></div></div>
+                        <div id="consignaPrecioFields" class="hidden bg-slate-50 p-4 rounded-lg border border-slate-200"><div class="grid grid-cols-2 gap-4 mb-3"><div><label class="block text-sm font-medium text-slate-700 mb-1">Precio Unit.:</label><input type="number" id="precioUnitarioConsigna" name="precioUnitarioConsigna" step="0.01" min="0" class="w-full p-2 border border-slate-300 rounded-md"></div><div class="flex items-center pt-6"><input type="checkbox" id="ivaConsigna" name="incluyeIVA" checked class="h-4 w-4 text-sky-600 rounded"><label for="ivaConsigna" class="ml-2 text-sm text-slate-700">Incluye IVA</label></div></div><div class="flex items-center mb-2"><input type="checkbox" id="posConsigna" name="pagoConPOS" class="h-4 w-4 text-sky-600 rounded"><label for="posConsigna" class="ml-2 text-sm text-slate-700">Pago con POS</label></div><div id="posFieldsConsigna" class="hidden ml-6"><label class="text-sm font-medium text-slate-700">% Comisión:</label><input type="number" id="comisionPOSConsigna" name="comisionPOS" class="w-20 p-1 border border-slate-300 rounded text-sm ml-2"></div></div>
+                        <div><label class="block text-sm font-medium text-slate-700 mb-1">Nota:</label><input type="text" id="descConsigna" name="descripcionVenta" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Detalle opcional"></div>
                     </div>
                 </div>
-                <div class="flex items-center justify-end pt-6"><button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2">Procesar</button></div>
+                <div class="flex items-center justify-end pt-6"><button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md">Procesar</button></div>
             </form>
         </div>
         
         <!-- PESTAÑA GASTOS -->
         <div id="expenseContent" class="hidden">
-             <!-- Formulario Gastos Igual -->
              <form id="expenseForm" class="space-y-6">
-                <!-- (Contenido igual al anterior) -->
+                <input type="hidden" name="formType" value="expense">
                 <div><label class="block text-sm font-medium text-slate-700">Tipo de Gasto:</label><select name="tipoGasto" class="w-full p-3 border border-slate-300 rounded-lg"><option>Transporte</option><option>Material de Empaque</option><option>Insumos</option><option>Publicidad</option><option>Servicios</option><option>Salarios</option><option>Otros</option></select></div>
                 <div class="grid grid-cols-3 gap-4 items-end"><div class="col-span-2"><label class="block text-sm font-medium text-slate-700">Valor:</label><input type="number" name="valorGasto" step="0.01" class="w-full p-3 border border-slate-300 rounded-lg"></div><div class="col-span-1 flex items-center pb-3"><input type="checkbox" name="gastoIncluyeIVA" checked class="h-4 w-4 text-sky-600 rounded"><label class="ml-2 text-sm text-slate-700">IVA Inc.</label></div></div>
                 <div><label class="block text-sm font-medium text-slate-700">Pago:</label><div class="flex space-x-4"><label><input type="radio" name="metodoPago" value="Efectivo" checked> Efectivo</label><label><input type="radio" name="metodoPago" value="Tarjeta"> Tarjeta</label></div></div>
@@ -194,17 +165,31 @@
             </form>
         </div>
 
+        <!-- PESTAÑA COMERCIOS (SIMPLIFICADA) -->
+        <div id="clientsContent" class="hidden">
+             <form id="clientForm" class="space-y-6">
+                <input type="hidden" name="formType" value="client">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Nombre del Comercio:</label>
+                    <input type="text" name="nombreComercio" required class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Ej: Tienda XYZ">
+                </div>
+                <!-- Campos eliminados: Contacto, Teléfono, Email, Dirección -->
+                <div class="flex justify-end pt-4"><button type="submit" class="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-semibold">Guardar Comercio</button></div>
+            </form>
+        </div>
+
         <!-- PESTAÑA ETIQUETAS -->
         <div id="labelsContent" class="hidden">
-             <!-- Formulario Etiquetas Igual -->
-             <form id="label-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div><label class="block text-sm font-medium text-slate-700">Nombre</label><input type="text" id="labelName" class="w-full p-2 border rounded"></div>
-                <div><label class="block text-sm font-medium text-slate-700">Teléfono</label><input type="tel" id="labelPhone" class="w-full p-2 border rounded"></div>
-                <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700">Dirección</label><textarea id="labelAddress" class="w-full p-2 border rounded"></textarea></div>
+             <!-- (Contenido igual al anterior) -->
+             <p class="text-slate-600 mb-6">Completa los datos para la etiqueta.</p>
+            <form id="label-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div><label class="block text-sm font-medium text-slate-700">Nombre</label><input type="text" id="labelName" required class="w-full px-3 py-2 border border-slate-300 rounded-md"></div>
+                <div><label class="block text-sm font-medium text-slate-700">Teléfono</label><input type="tel" id="labelPhone" required class="w-full px-3 py-2 border border-slate-300 rounded-md"></div>
+                <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700">Dirección</label><textarea id="labelAddress" rows="3" required class="w-full px-3 py-2 border border-slate-300 rounded-md"></textarea></div>
                 <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700">Productos</label><div id="label-products-list" class="space-y-3"></div><button type="button" id="add-label-product-btn" class="mt-2 text-sm text-sky-600">+ Producto</button></div>
-                <div><label class="block text-sm font-medium text-slate-700">Total</label><input type="number" id="labelPrice" step="0.01" class="w-full p-2 border rounded"></div>
-                <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700">Pago</label><select id="label-payment-method" class="w-full p-2 border rounded"><option>Efectivo</option><option>Transferencia</option></select></div>
-                <div class="md:col-span-2"><button type="submit" class="w-full bg-sky-600 text-white py-3 rounded font-semibold">Agregar a Cola</button></div>
+                <div><label class="block text-sm font-medium text-slate-700">Total</label><input type="number" id="labelPrice" step="0.01" required class="w-full px-3 py-2 border border-slate-300 rounded-md"></div>
+                <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700">Pago</label><select id="label-payment-method" class="w-full px-3 py-2 border border-slate-300 rounded-md"><option>Efectivo</option><option>Transferencia</option></select></div>
+                <div class="md:col-span-2"><button type="submit" class="w-full mt-4 bg-sky-600 text-white font-semibold py-3 px-4 rounded-md">Agregar Etiqueta</button></div>
             </form>
         </div>
 
@@ -214,7 +199,7 @@
         </div>
     </div>
 
-    <!-- Contenedor Impresión Etiquetas -->
+    <!-- Contenedor Impresión -->
     <div class="non-printable max-w-3xl mx-auto mt-8"><div id="action-buttons" class="hidden flex-col sm:flex-row gap-4 mb-8"><button id="print-btn" class="w-full sm:w-auto flex-1 bg-green-600 text-white font-semibold py-3 px-6 rounded-md hover:bg-green-700">Imprimir Todas</button><button id="clear-btn" class="w-full sm:w-auto flex-1 bg-red-600 text-white font-semibold py-3 px-6 rounded-md hover:bg-red-700">Limpiar Cola</button></div></div>
     <div id="print-area"><div id="labels-container"></div></div>
 
@@ -235,22 +220,30 @@
         const FULL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMapJvU3t9B7c0sfZIQRJbjPZpqjVVQCF9gsJrQd4evSVDCeNnPKlRfdkPLoxkZE8JyA/exec';
         const productOptionsTemplate = document.getElementById('productOptionsTemplate');
         
-        // --- Referencias UI ---
+        // Tabs
         const tabInventoryBtn = document.getElementById('tabInventoryBtn');
         const tabExpenseBtn = document.getElementById('tabExpenseBtn');
+        const tabClientsBtn = document.getElementById('tabClientsBtn');
         const tabLabelsBtn = document.getElementById('tabLabelsBtn');
+        
         const inventoryContent = document.getElementById('inventoryContent');
         const expenseContent = document.getElementById('expenseContent');
+        const clientsContent = document.getElementById('clientsContent');
         const labelsContent = document.getElementById('labelsContent');
-        const messageDiv = document.getElementById('message');
-        const loader = document.getElementById('loader');
-
-        // Inventario UI
+        const actionButtons = document.getElementById('action-buttons');
+        
+        // Forms
         const inventoryForm = document.getElementById('inventoryForm');
+        const expenseForm = document.getElementById('expenseForm');
+        const clientForm = document.getElementById('clientForm');
+        const labelForm = document.getElementById('label-form');
+
+        // Inventory Elements
         const radiosMovement = document.getElementsByName('mainMovementType');
+        const radiosDestino = document.getElementsByName('ventaDestino');
         const formIngreso = document.getElementById('formIngreso');
         const formVenta = document.getElementById('formVenta');
-        const formGestionConsigna = document.getElementById('formGestionConsigna'); // NUEVO
+        const formGestionConsigna = document.getElementById('formGestionConsigna');
         const productLinesContainer = document.getElementById('productLines');
         const addProductBtn = document.getElementById('addProductBtn');
         const saleTotalEl = document.getElementById('saleTotal');
@@ -258,36 +251,19 @@
         const posFields = document.getElementById('posFields');
         const incluyeDeliveryCheckbox = document.getElementById('incluyeDelivery');
         const deliveryFields = document.getElementById('deliveryFields');
-        const containerPOS = document.getElementById('containerPOS');
-        const containerDelivery = document.getElementById('containerDelivery');
-        const divMuestra = document.getElementById('divMuestra');
-        const lblFactura = document.getElementById('lblFactura');
+        const divNombreCliente = document.getElementById('divNombreCliente');
+        const divComercioSelect = document.getElementById('divComercioSelect');
+        const clienteComercioSelect = document.getElementById('clienteComercio');
+        const btnRefreshClients = document.getElementById('btnRefreshClients');
 
-        // Gestion Consigna UI
-        const consignaSelect = document.getElementById('consignaSelect');
-        const refreshConsignasBtn = document.getElementById('refreshConsignasBtn');
-        const consignaDetails = document.getElementById('consignaDetails');
-        const consProdSpan = document.getElementById('consProd');
-        const consQtySpan = document.getElementById('consQty');
-        const cantVentaConsigna = document.getElementById('cantVentaConsigna');
-        const consignaPrecioFields = document.getElementById('consignaPrecioFields');
-        const posConsigna = document.getElementById('posConsigna');
-        const posFieldsConsigna = document.getElementById('posFieldsConsigna');
+        // Common
+        const loader = document.getElementById('loader');
+        const messageDiv = document.getElementById('message');
 
-        // Etiquetas & Gastos UI
-        const expenseForm = document.getElementById('expenseForm');
-        const labelForm = document.getElementById('label-form');
-        const labelsContainer = document.getElementById('labels-container');
-        const labelProductsList = document.getElementById('label-products-list');
-        const addLabelProductBtn = document.getElementById('add-label-product-btn');
-        const printBtn = document.getElementById('print-btn');
-        const clearBtn = document.getElementById('clear-btn');
-        const actionButtons = document.getElementById('action-buttons');
-
-        // --- Funciones Pestañas ---
+        // --- TABS ---
         function switchTab(activeTab) {
-            const tabs = { inventory: tabInventoryBtn, expense: tabExpenseBtn, labels: tabLabelsBtn };
-            const contents = { inventory: inventoryContent, expense: expenseContent, labels: labelsContent };
+            const tabs = { inventory: tabInventoryBtn, expense: tabExpenseBtn, clients: tabClientsBtn, labels: tabLabelsBtn };
+            const contents = { inventory: inventoryContent, expense: expenseContent, clients: clientsContent, labels: labelsContent };
             Object.keys(tabs).forEach(key => {
                 const isActive = key === activeTab;
                 tabs[key].classList.toggle('active', isActive);
@@ -299,107 +275,71 @@
         }
         tabInventoryBtn.addEventListener('click', () => switchTab('inventory'));
         tabExpenseBtn.addEventListener('click', () => switchTab('expense'));
+        tabClientsBtn.addEventListener('click', () => switchTab('clients'));
         tabLabelsBtn.addEventListener('click', () => switchTab('labels'));
 
-        // --- Lógica Inventario ---
+        // --- INVENTORY LOGIC ---
         function toggleInventoryForms() {
             const movType = document.querySelector('input[name="mainMovementType"]:checked').value;
-            
-            formIngreso.classList.add('hidden');
-            formVenta.classList.add('hidden');
-            formGestionConsigna.classList.add('hidden');
+            formIngreso.classList.toggle('hidden', movType !== 'Ingreso');
+            formVenta.classList.toggle('hidden', !['Venta', 'ConsignacionSalida'].includes(movType));
+            if(formGestionConsigna) formGestionConsigna.classList.toggle('hidden', movType !== 'GestionarConsigna');
 
-            if (movType === 'Ingreso') {
-                formIngreso.classList.remove('hidden');
-            } else if (movType === 'GestionarConsigna') {
-                formGestionConsigna.classList.remove('hidden');
-                loadConsignments(); // Cargar lista al entrar
-            } else {
-                // Venta o ConsignacionSalida (Usan el formulario múltiple)
-                formVenta.classList.remove('hidden');
+            if (['Venta', 'ConsignacionSalida'].includes(movType)) {
                 if (productLinesContainer.children.length === 0) addProductLine();
-                
                 const isConsignaSalida = movType === 'ConsignacionSalida';
-                containerPOS.classList.toggle('hidden', isConsignaSalida);
-                containerDelivery.classList.toggle('hidden', isConsignaSalida);
-                divMuestra.classList.toggle('hidden', isConsignaSalida);
-                
-                lblFactura.textContent = isConsignaSalida ? "Cliente / Empresa:" : "Número de Factura:";
-                document.getElementById('numeroFactura').placeholder = isConsignaSalida ? "Nombre del Cliente" : "Ej: 001-001";
-                
-                // Ocultar precio en líneas si es Consignación Salida
-                document.querySelectorAll('.price-field').forEach(el => el.classList.toggle('invisible', isConsignaSalida));
+                document.getElementById('containerPOS').classList.toggle('hidden', isConsignaSalida);
+                document.getElementById('containerDelivery').classList.toggle('hidden', isConsignaSalida);
+                document.getElementById('divMuestra').classList.toggle('hidden', isConsignaSalida);
+                // Si es consigna, forzamos destino comercio (opcional, o dejamos elegir)
             }
         }
-        radiosMovement.forEach(r => r.addEventListener('change', toggleInventoryForms));
+        
+        function toggleDestinoVenta() {
+            const destino = document.querySelector('input[name="ventaDestino"]:checked').value;
+            divNombreCliente.classList.toggle('hidden', destino !== 'Delivery');
+            divComercioSelect.classList.toggle('hidden', destino !== 'Comercio');
+            if (destino === 'Comercio' && clienteComercioSelect.options.length <= 1) {
+                loadClients();
+            }
+        }
 
-        // --- Lógica Gestión Consignas ---
-        async function loadConsignments() {
-            consignaSelect.innerHTML = '<option>Cargando...</option>';
+        async function loadClients() {
+            clienteComercioSelect.innerHTML = '<option>Cargando...</option>';
             try {
-                const response = await fetch(`${FULL_SCRIPT_URL}?action=getConsignments`);
-                const result = await response.json();
-                if (result.success && result.consignments.length > 0) {
-                    consignaSelect.innerHTML = '<option value="" disabled selected>Selecciona una consigna...</option>';
-                    result.consignments.forEach(c => {
-                        const option = document.createElement('option');
-                        option.value = JSON.stringify(c); // Guardar objeto entero como valor
-                        option.textContent = `${c.fecha} - ${c.cliente} - ${c.producto} (${c.cantidad})`;
-                        consignaSelect.appendChild(option);
+                const res = await fetch(`${FULL_SCRIPT_URL}?action=getClients`);
+                const json = await res.json();
+                if (json.success && json.clients.length > 0) {
+                    clienteComercioSelect.innerHTML = '<option value="" disabled selected>Seleccione un comercio...</option>';
+                    json.clients.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c; opt.textContent = c;
+                        clienteComercioSelect.appendChild(opt);
                     });
                 } else {
-                    consignaSelect.innerHTML = '<option disabled>No hay consignaciones pendientes</option>';
+                    clienteComercioSelect.innerHTML = '<option disabled>No hay comercios</option>';
                 }
-            } catch (e) { consignaSelect.innerHTML = '<option>Error al cargar</option>'; }
+            } catch (e) { clienteComercioSelect.innerHTML = '<option>Error</option>'; }
         }
-        
-        refreshConsignasBtn.addEventListener('click', loadConsignments);
-        
-        consignaSelect.addEventListener('change', () => {
-            const data = JSON.parse(consignaSelect.value);
-            consignaDetails.classList.remove('hidden');
-            consProdSpan.textContent = data.producto;
-            consQtySpan.textContent = data.cantidad;
-        });
 
-        cantVentaConsigna.addEventListener('input', () => {
-            const val = parseFloat(cantVentaConsigna.value) || 0;
-            consignaPrecioFields.classList.toggle('hidden', val <= 0);
-        });
-
-        posConsigna.addEventListener('change', () => posFieldsConsigna.classList.toggle('hidden', !posConsigna.checked));
-
-        // --- Helpers Inventario General ---
+        radiosMovement.forEach(r => r.addEventListener('change', toggleInventoryForms));
+        radiosDestino.forEach(r => r.addEventListener('change', toggleDestinoVenta));
+        btnRefreshClients.addEventListener('click', loadClients);
         pagoConPOSCheckbox.addEventListener('change', () => posFields.classList.toggle('hidden', !pagoConPOSCheckbox.checked));
         incluyeDeliveryCheckbox.addEventListener('change', () => deliveryFields.classList.toggle('hidden', !incluyeDeliveryCheckbox.checked));
 
         function addProductLine() {
-            const lineDiv = document.createElement('div');
-            lineDiv.className = 'product-line grid grid-cols-12 gap-x-2 gap-y-3 items-start border-t pt-3';
-            // Logic to hide price fields if ConsignacionSalida is active
-            const isConsignaSalida = document.querySelector('input[name="mainMovementType"]:checked').value === 'ConsignacionSalida';
-            const hideClass = isConsignaSalida ? 'invisible' : '';
-            
-            lineDiv.innerHTML = `
-                <div class="col-span-12 sm:col-span-4 relative">
-                    <select name="producto" class="w-full p-2 border border-slate-300 rounded-md shadow-sm">${productOptionsTemplate.innerHTML}</select>
-                    <div class="stock-display text-right text-sm text-slate-500 font-semibold h-5 mt-1 pr-1"></div>
-                </div>
-                <div class="col-span-4 sm:col-span-2"><input type="number" name="cantidad" min="1" placeholder="Cant." class="w-full p-2 border border-slate-300 rounded-md shadow-sm"></div>
-                <div class="col-span-8 sm:col-span-2 price-field ${hideClass}"><input type="number" name="precioUnitario" step="0.01" min="0" placeholder="P. Unit." class="w-full p-2 border border-slate-300 rounded-md shadow-sm"></div>
-                <div class="col-span-8 sm:col-span-3 price-field ${hideClass}"><input type="text" name="subtotal" readonly class="w-full p-2 bg-slate-100 border-slate-300 rounded-md text-right font-medium" value="$0.00"></div>
-                <div class="col-span-4 sm:col-span-1 flex items-center justify-end space-x-2">
-                    <div class="price-field ${hideClass} flex flex-col items-center mr-2"><input type="checkbox" name="incluyeIVA" checked class="h-4 w-4 text-sky-600 rounded"><label class="text-[10px]">IVA</label></div>
-                    <button type="button" class="remove-product-btn text-red-500 hover:text-red-700 font-bold p-1 rounded-full leading-none h-6 w-6 flex items-center justify-center">✕</button>
-                </div>`;
-            productLinesContainer.appendChild(lineDiv);
+            const div = document.createElement('div');
+            div.className = 'product-line grid grid-cols-12 gap-x-2 gap-y-3 items-start border-t pt-3';
+            div.innerHTML = `<div class="col-span-12 sm:col-span-4"><select name="producto" class="w-full p-2 border border-slate-300 rounded-md shadow-sm">${productOptionsTemplate.innerHTML}</select><div class="stock-display text-right text-xs text-slate-500 font-semibold h-4 mt-1 pr-1"></div></div><div class="col-span-4 sm:col-span-2"><input type="number" name="cantidad" min="1" placeholder="Cant." class="w-full p-2 border border-slate-300 rounded-md shadow-sm"></div><div class="col-span-8 sm:col-span-2"><input type="number" name="precioUnitario" step="0.01" min="0" placeholder="P. Unit." class="w-full p-2 border border-slate-300 rounded-md shadow-sm"></div><div class="col-span-8 sm:col-span-3"><input type="text" name="subtotal" readonly class="w-full p-2 bg-slate-100 border-slate-300 rounded-md text-right font-medium" value="$0.00"></div><div class="col-span-4 sm:col-span-1 flex items-center justify-end space-x-2"><div class="flex flex-col items-center mr-2"><input type="checkbox" name="incluyeIVA" checked class="h-4 w-4 text-sky-600 rounded"><label class="text-[10px]">IVA</label></div><button type="button" class="remove-product-btn text-red-500 font-bold p-1 leading-none h-6 w-6">✕</button></div>`;
+            productLinesContainer.appendChild(div);
         }
-
+        
         addProductBtn.addEventListener('click', addProductLine);
-        productLinesContainer.addEventListener('click', (e) => { if(e.target.classList.contains('remove-product-btn')) { e.target.closest('.product-line').remove(); updateSaleTotal(); }});
-        productLinesContainer.addEventListener('input', (e) => { if(['cantidad','precioUnitario'].includes(e.target.name)) updateLineAndTotal(e.target.closest('.product-line')); });
-        productLinesContainer.addEventListener('change', (e) => { if(e.target.name === 'producto') fetchStock(e.target.value, e.target.parentElement.querySelector('.stock-display')); });
-        document.getElementById('productoIngreso').addEventListener('change', (e) => fetchStock(e.target.value, document.getElementById('stockIngreso')));
+        productLinesContainer.addEventListener('click', e => { if(e.target.classList.contains('remove-product-btn')) { e.target.closest('.product-line').remove(); updateSaleTotal(); } });
+        productLinesContainer.addEventListener('input', e => { if(['cantidad','precioUnitario'].includes(e.target.name)) updateLineAndTotal(e.target.closest('.product-line')); });
+        productLinesContainer.addEventListener('change', e => { if(e.target.name==='producto') fetchStock(e.target.value, e.target.parentElement.querySelector('.stock-display')); });
+        document.getElementById('productoIngreso').addEventListener('change', e => fetchStock(e.target.value, document.getElementById('stockIngreso')));
 
         function updateLineAndTotal(line) {
             const qty = parseFloat(line.querySelector('input[name="cantidad"]').value)||0;
@@ -414,7 +354,6 @@
             });
             saleTotalEl.textContent = `$${total.toFixed(2)}`;
         }
-        
         async function fetchStock(name, el) {
             if(!name) { el.textContent=''; return; }
             el.textContent='...';
@@ -428,61 +367,57 @@
         // --- SUBMIT ---
         async function handleFormSubmit(e) {
             e.preventDefault();
-            if (e.target.id === 'label-form') return; 
-
+            if (e.target.id === 'label-form') return;
             loader.style.display = 'block'; messageDiv.textContent = '';
             
             const formData = new FormData(e.target);
-            let data = { formType: e.target.id.replace('Form', '') };
+            let data = { formType: e.target.id.replace('Form', '') }; // inventory, expense, client
             
             if (data.formType === 'inventory') {
                 data.tipoMovimiento = formData.get('mainMovementType');
-                
-                if (data.tipoMovimiento === 'GestionarConsigna') {
-                    // Datos para gestión de consigna
-                    const selectedOption = consignaSelect.options[consignaSelect.selectedIndex];
-                    if(!selectedOption || !selectedOption.value) { showMessage('Seleccione una consigna', 'error'); loader.style.display='none'; return; }
-                    
-                    const consData = JSON.parse(selectedOption.value);
-                    data.idConsigna = consData.id;
-                    data.cantidadVenta = formData.get('cantVentaConsigna');
-                    data.cantidadDevolucion = formData.get('cantDevolucionConsigna');
-                    data.precioUnitario = formData.get('precioUnitarioConsigna');
-                    data.incluyeIVA = formData.get('incluyeIVA') === 'on';
-                    data.pagoConPOS = formData.get('pagoConPOS') === 'on';
-                    data.comisionPOS = formData.get('comisionPOS');
-                    data.descripcionVenta = formData.get('descripcionVenta'); // Reutilizando campo nombre
-                    
-                    if (Number(data.cantidadVenta) + Number(data.cantidadDevolucion) === 0) {
-                        showMessage('Ingrese cantidad a facturar o devolver.', 'error'); loader.style.display='none'; return;
-                    }
-                } 
-                else if (data.tipoMovimiento === 'Ingreso') {
-                    data.producto = formData.get('producto');
-                    data.cantidad = formData.get('cantidad');
-                } 
-                else { // Venta o Salida Consigna
+                if (data.tipoMovimiento !== 'Ingreso' && data.tipoMovimiento !== 'GestionarConsigna') {
+                    // Logic for Venta/ConsignaSalida
                     const lines = Array.from(document.querySelectorAll('.product-line')).map(l => ({
                         producto: l.querySelector('select[name="producto"]').value,
                         cantidad: l.querySelector('input[name="cantidad"]').value,
                         precioUnitario: l.querySelector('input[name="precioUnitario"]').value,
                         incluyeIVA: l.querySelector('input[name="incluyeIVA"]').checked
                     }));
-                    if(lines.some(l => !l.producto || !l.cantidad)) { showMessage('Complete los productos', 'error'); loader.style.display='none'; return; }
+                    if(lines.some(l => !l.producto || !l.cantidad)) { showMessage('Complete productos', 'error'); loader.style.display='none'; return; }
                     
                     data.productos = lines;
                     data.numeroFactura = formData.get('numeroFactura');
                     data.descripcionVenta = formData.get('descripcionVenta');
+                    
                     if (data.tipoMovimiento === 'Venta') {
+                        // Determinar nombre del cliente según el tipo de destino
+                        const destino = formData.get('ventaDestino');
+                        data.tipoVenta = destino; // Delivery o Comercio
+                        data.nombreCliente = (destino === 'Delivery') ? formData.get('nombreClienteDelivery') : formData.get('clienteComercio');
+                        
+                        if (!data.nombreCliente) {
+                            showMessage('Ingrese o seleccione el nombre del cliente', 'error'); loader.style.display='none'; return;
+                        }
+
                         data.esMuestra = formData.get('esMuestra') === 'on';
                         data.pagoConPOS = formData.get('pagoConPOS') === 'on';
                         data.comisionPOS = formData.get('comisionPOS');
                         data.incluyeDelivery = formData.get('incluyeDelivery') === 'on';
                         data.montoDelivery = formData.get('montoDelivery');
+                    } else {
+                        // Consignacion Salida (usaremos el campo numeroFactura para el nombre del cliente, o se puede adaptar)
+                         data.nombreCliente = formData.get('numeroFactura'); 
                     }
+                } else if (data.tipoMovimiento === 'Ingreso') {
+                    data.producto = formData.get('producto');
+                    data.cantidad = formData.get('cantidad');
                 }
+            } else if (data.formType === 'client') {
+                data.nombreComercio = formData.get('nombreComercio');
+                // Campos eliminados ya no se capturan aquí
             } else {
-                data = { ...data, ...Object.fromEntries(formData.entries()), gastoIncluyeIVA: formData.get('gastoIncluyeIVA')==='on' };
+                // Gastos
+                 data = { ...data, ...Object.fromEntries(formData.entries()), gastoIncluyeIVA: formData.get('gastoIncluyeIVA')==='on' };
             }
 
             try {
@@ -491,49 +426,38 @@
                 if (json.success) {
                     showMessage(json.message, 'success');
                     e.target.reset();
-                    if(data.tipoMovimiento === 'Venta' || data.tipoMovimiento === 'ConsignacionSalida') {
+                    if(data.formType === 'inventory' && data.tipoMovimiento === 'Venta') {
                         productLinesContainer.innerHTML = ''; addProductLine(); updateSaleTotal();
+                        posFields.classList.add('hidden'); deliveryFields.classList.add('hidden');
                     }
-                    if(data.tipoMovimiento === 'GestionarConsigna') {
-                        consignaDetails.classList.add('hidden');
-                        loadConsignments(); // Recargar lista
-                    }
-                    // Reset UI states
-                    posFields.classList.add('hidden'); deliveryFields.classList.add('hidden');
-                    // Reset to default tab state if needed or stay
-                } else {
-                    showMessage(json.error, 'error');
-                }
-            } catch(err) { showMessage('Error de conexión', 'error'); } 
+                } else { showMessage(json.error, 'error'); }
+            } catch(err) { showMessage('Error conexión', 'error'); } 
             finally { loader.style.display = 'none'; }
         }
 
         // --- Etiquetas ---
-        function addLabelProductLine() { /* (Igual que antes) */
+        // (Código de etiquetas sin cambios)
+        const labelsContainer = document.getElementById('labels-container');
+        const labelProductsList = document.getElementById('label-products-list');
+        document.getElementById('add-label-product-btn').addEventListener('click', () => {
              const div = document.createElement('div'); div.className = 'label-product-entry grid grid-cols-12 gap-2 items-center';
              div.innerHTML = `<div class="col-span-3"><input type="number" name="quantity" value="1" min="1" class="w-full px-3 py-2 border border-slate-300 rounded-md"></div><div class="col-span-8"><select name="product" class="w-full px-3 py-2 border border-slate-300 rounded-md">${productOptionsTemplate.innerHTML}</select></div><div class="col-span-1 text-center"><button type="button" class="remove-label-product-btn text-red-500 font-bold text-xl">&times;</button></div>`;
              labelProductsList.appendChild(div);
-        }
+        });
+        labelProductsList.addEventListener('click', e => { if(e.target.classList.contains('remove-label-product-btn')) e.target.closest('.label-product-entry').remove(); });
+        document.getElementById('print-btn').addEventListener('click', () => window.print());
+        document.getElementById('clear-btn').addEventListener('click', () => labelsContainer.innerHTML = '');
         labelForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const data = new FormData(labelForm);
-            // Logic to create label visual
+            const d = new FormData(labelForm);
             const label = document.createElement('div'); label.className = 'label';
             let prods = '<ul class="list-disc list-inside pl-1 text-sm">';
-            document.querySelectorAll('.label-product-entry').forEach(l => {
-                prods += `<li>${l.querySelector('input').value} x ${l.querySelector('select').value}</li>`;
-            });
+            document.querySelectorAll('.label-product-entry').forEach(l => prods += `<li>${l.querySelector('input').value} x ${l.querySelector('select').value}</li>`);
             prods += '</ul>';
-            label.innerHTML = `<p><strong>${data.get('labelName')}</strong></p><p>${data.get('labelPhone')}</p><p>${data.get('labelAddress')}</p><div>${prods}</div><p>Total: $${data.get('labelPrice')}</p><p class="mt-2 pt-2 border-t">${data.get('label-payment-method')}</p>`;
+            label.innerHTML = `<p><strong>${d.get('labelName')}</strong></p><p>${d.get('labelPhone')}</p><p>${d.get('labelAddress')}</p><div>${prods}</div><p>Total: $${d.get('labelPrice')}</p><p class="mt-2 pt-2 border-t">${d.get('label-payment-method')}</p>`;
             labelsContainer.appendChild(label);
-            labelForm.reset(); labelProductsList.innerHTML=''; addLabelProductLine();
+            labelForm.reset(); labelProductsList.innerHTML=''; 
         });
-        
-        // Listeners Etiquetas
-        addLabelProductBtn.addEventListener('click', addLabelProductLine);
-        labelProductsList.addEventListener('click', (e) => { if(e.target.classList.contains('remove-label-product-btn')) e.target.closest('.label-product-entry').remove(); });
-        printBtn.addEventListener('click', () => window.print());
-        clearBtn.addEventListener('click', () => labelsContainer.innerHTML = '');
 
         function showMessage(msg, type) {
             messageDiv.textContent = msg;
@@ -542,10 +466,10 @@
 
         // Init
         document.getElementById('productoIngreso').innerHTML = productOptionsTemplate.innerHTML;
-        addLabelProductLine();
         toggleInventoryForms();
         inventoryForm.addEventListener('submit', handleFormSubmit);
         expenseForm.addEventListener('submit', handleFormSubmit);
+        clientForm.addEventListener('submit', handleFormSubmit);
 
     </script>
 </body>
