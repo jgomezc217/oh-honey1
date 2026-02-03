@@ -69,8 +69,6 @@
                     <div id="consignaOptions" class="hidden bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-2">
                         <p class="text-sm font-semibold text-blue-800 mb-2">Seleccione:</p>
                         <label class="flex items-center"><input type="radio" name="consignaType" value="ConsignacionSalida" class="form-radio h-4 w-4 text-blue-600" checked><span class="ml-2 text-sm">Salida de Producto</span></label>
-                        <label class="flex items-center"><input type="radio" name="consignaType" value="LiquidacionConsignacion" class="form-radio h-4 w-4 text-blue-600"><span class="ml-2 text-sm">Liquidación</span></label>
-                        <label class="flex items-center"><input type="radio" name="consignaType" value="DevolucionConsignacion" class="form-radio h-4 w-4 text-blue-600"><span class="ml-2 text-sm">Devolución</span></label>
                     </div>
 
                     <!-- Form Ingreso -->
@@ -173,7 +171,6 @@
                     <label class="block text-sm font-medium text-slate-700 mb-1">Nombre del Comercio:</label>
                     <input type="text" name="nombreComercio" required class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Ej: Tienda XYZ">
                 </div>
-                <!-- Campos eliminados: Contacto, Teléfono, Email, Dirección -->
                 <div class="flex justify-end pt-4"><button type="submit" class="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-semibold">Guardar Comercio</button></div>
             </form>
         </div>
@@ -256,6 +253,24 @@
         const clienteComercioSelect = document.getElementById('clienteComercio');
         const btnRefreshClients = document.getElementById('btnRefreshClients');
 
+        // Gestion Consigna UI
+        const consignaSelect = document.getElementById('consignaSelect');
+        const refreshConsignasBtn = document.getElementById('refreshConsignasBtn');
+        const consignaDetails = document.getElementById('consignaDetails');
+        const consProdSpan = document.getElementById('consProd');
+        const consQtySpan = document.getElementById('consQty');
+        const cantVentaConsigna = document.getElementById('cantVentaConsigna');
+        const consignaPrecioFields = document.getElementById('consignaPrecioFields');
+        const posConsigna = document.getElementById('posConsigna');
+        const posFieldsConsigna = document.getElementById('posFieldsConsigna');
+
+        // Elementos Etiquetas
+        const labelsContainer = document.getElementById('labels-container');
+        const printBtn = document.getElementById('print-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const addLabelProductBtn = document.getElementById('add-label-product-btn');
+        const labelProductsList = document.getElementById('label-products-list');
+
         // Common
         const loader = document.getElementById('loader');
         const messageDiv = document.getElementById('message');
@@ -291,7 +306,9 @@
                 document.getElementById('containerPOS').classList.toggle('hidden', isConsignaSalida);
                 document.getElementById('containerDelivery').classList.toggle('hidden', isConsignaSalida);
                 document.getElementById('divMuestra').classList.toggle('hidden', isConsignaSalida);
-                // Si es consigna, forzamos destino comercio (opcional, o dejamos elegir)
+            }
+            if (movType === 'GestionarConsigna') {
+                loadConsignments();
             }
         }
         
@@ -327,6 +344,42 @@
         btnRefreshClients.addEventListener('click', loadClients);
         pagoConPOSCheckbox.addEventListener('change', () => posFields.classList.toggle('hidden', !pagoConPOSCheckbox.checked));
         incluyeDeliveryCheckbox.addEventListener('change', () => deliveryFields.classList.toggle('hidden', !incluyeDeliveryCheckbox.checked));
+
+        // --- GESTIÓN CONSIGNA ---
+        async function loadConsignments() {
+            consignaSelect.innerHTML = '<option>Cargando...</option>';
+            try {
+                const response = await fetch(`${FULL_SCRIPT_URL}?action=getConsignments`);
+                const result = await response.json();
+                if (result.success && result.consignments.length > 0) {
+                    consignaSelect.innerHTML = '<option value="" disabled selected>Selecciona una consigna...</option>';
+                    result.consignments.forEach(c => {
+                        const option = document.createElement('option');
+                        option.value = JSON.stringify(c);
+                        option.textContent = `${c.fecha} - ${c.cliente} - ${c.producto} (${c.cantidad})`;
+                        consignaSelect.appendChild(option);
+                    });
+                } else {
+                    consignaSelect.innerHTML = '<option disabled>No hay consignaciones pendientes</option>';
+                }
+            } catch (e) { consignaSelect.innerHTML = '<option>Error al cargar</option>'; }
+        }
+        refreshConsignasBtn.addEventListener('click', loadConsignments);
+        
+        consignaSelect.addEventListener('change', () => {
+            const data = JSON.parse(consignaSelect.value);
+            consignaDetails.classList.remove('hidden');
+            consProdSpan.textContent = data.producto;
+            consQtySpan.textContent = data.cantidad;
+        });
+
+        cantVentaConsigna.addEventListener('input', () => {
+            const val = parseFloat(cantVentaConsigna.value) || 0;
+            consignaPrecioFields.classList.toggle('hidden', val <= 0);
+        });
+
+        posConsigna.addEventListener('change', () => posFieldsConsigna.classList.toggle('hidden', !posConsigna.checked));
+
 
         function addProductLine() {
             const div = document.createElement('div');
@@ -371,11 +424,25 @@
             loader.style.display = 'block'; messageDiv.textContent = '';
             
             const formData = new FormData(e.target);
-            let data = { formType: e.target.id.replace('Form', '') }; // inventory, expense, client
+            let data = { formType: e.target.id.replace('Form', '') };
             
             if (data.formType === 'inventory') {
                 data.tipoMovimiento = formData.get('mainMovementType');
-                if (data.tipoMovimiento !== 'Ingreso' && data.tipoMovimiento !== 'GestionarConsigna') {
+                if (data.tipoMovimiento === 'GestionarConsigna') {
+                    // Datos gestión consigna
+                    const selectedOption = consignaSelect.options[consignaSelect.selectedIndex];
+                    if(!selectedOption || !selectedOption.value) { showMessage('Seleccione una consigna', 'error'); loader.style.display='none'; return; }
+                    const consData = JSON.parse(selectedOption.value);
+                    data.idConsigna = consData.id;
+                    data.cantidadVenta = formData.get('cantVentaConsigna');
+                    data.cantidadDevolucion = formData.get('cantDevolucionConsigna');
+                    data.precioUnitario = formData.get('precioUnitarioConsigna');
+                    data.incluyeIVA = formData.get('incluyeIVA') === 'on';
+                    data.pagoConPOS = formData.get('pagoConPOS') === 'on';
+                    data.comisionPOS = formData.get('comisionPOS');
+                    data.descripcionVenta = formData.get('descripcionVenta');
+                }
+                else if (data.tipoMovimiento !== 'Ingreso') {
                     // Logic for Venta/ConsignaSalida
                     const lines = Array.from(document.querySelectorAll('.product-line')).map(l => ({
                         producto: l.querySelector('select[name="producto"]').value,
@@ -390,22 +457,16 @@
                     data.descripcionVenta = formData.get('descripcionVenta');
                     
                     if (data.tipoMovimiento === 'Venta') {
-                        // Determinar nombre del cliente según el tipo de destino
                         const destino = formData.get('ventaDestino');
-                        data.tipoVenta = destino; // Delivery o Comercio
+                        data.tipoVenta = destino; 
                         data.nombreCliente = (destino === 'Delivery') ? formData.get('nombreClienteDelivery') : formData.get('clienteComercio');
-                        
-                        if (!data.nombreCliente) {
-                            showMessage('Ingrese o seleccione el nombre del cliente', 'error'); loader.style.display='none'; return;
-                        }
-
+                        if (!data.nombreCliente) { showMessage('Ingrese nombre del cliente', 'error'); loader.style.display='none'; return; }
                         data.esMuestra = formData.get('esMuestra') === 'on';
                         data.pagoConPOS = formData.get('pagoConPOS') === 'on';
                         data.comisionPOS = formData.get('comisionPOS');
                         data.incluyeDelivery = formData.get('incluyeDelivery') === 'on';
                         data.montoDelivery = formData.get('montoDelivery');
                     } else {
-                        // Consignacion Salida (usaremos el campo numeroFactura para el nombre del cliente, o se puede adaptar)
                          data.nombreCliente = formData.get('numeroFactura'); 
                     }
                 } else if (data.tipoMovimiento === 'Ingreso') {
@@ -414,9 +475,7 @@
                 }
             } else if (data.formType === 'client') {
                 data.nombreComercio = formData.get('nombreComercio');
-                // Campos eliminados ya no se capturan aquí
             } else {
-                // Gastos
                  data = { ...data, ...Object.fromEntries(formData.entries()), gastoIncluyeIVA: formData.get('gastoIncluyeIVA')==='on' };
             }
 
@@ -430,21 +489,24 @@
                         productLinesContainer.innerHTML = ''; addProductLine(); updateSaleTotal();
                         posFields.classList.add('hidden'); deliveryFields.classList.add('hidden');
                     }
+                    if(data.tipoMovimiento === 'GestionarConsigna') {
+                        document.getElementById('consignaDetails').classList.add('hidden');
+                        document.getElementById('consignaPrecioFields').classList.add('hidden');
+                        loadConsignments();
+                    }
                 } else { showMessage(json.error, 'error'); }
             } catch(err) { showMessage('Error conexión', 'error'); } 
             finally { loader.style.display = 'none'; }
         }
 
         // --- Etiquetas ---
-        // (Código de etiquetas sin cambios)
-        const labelsContainer = document.getElementById('labels-container');
-        const labelProductsList = document.getElementById('label-products-list');
-        document.getElementById('add-label-product-btn').addEventListener('click', () => {
+        function addLabelProductLine() {
              const div = document.createElement('div'); div.className = 'label-product-entry grid grid-cols-12 gap-2 items-center';
              div.innerHTML = `<div class="col-span-3"><input type="number" name="quantity" value="1" min="1" class="w-full px-3 py-2 border border-slate-300 rounded-md"></div><div class="col-span-8"><select name="product" class="w-full px-3 py-2 border border-slate-300 rounded-md">${productOptionsTemplate.innerHTML}</select></div><div class="col-span-1 text-center"><button type="button" class="remove-label-product-btn text-red-500 font-bold text-xl">&times;</button></div>`;
              labelProductsList.appendChild(div);
-        });
+        }
         labelProductsList.addEventListener('click', e => { if(e.target.classList.contains('remove-label-product-btn')) e.target.closest('.label-product-entry').remove(); });
+        document.getElementById('add-label-product-btn').addEventListener('click', addLabelProductLine);
         document.getElementById('print-btn').addEventListener('click', () => window.print());
         document.getElementById('clear-btn').addEventListener('click', () => labelsContainer.innerHTML = '');
         labelForm.addEventListener('submit', (e) => {
@@ -456,7 +518,7 @@
             prods += '</ul>';
             label.innerHTML = `<p><strong>${d.get('labelName')}</strong></p><p>${d.get('labelPhone')}</p><p>${d.get('labelAddress')}</p><div>${prods}</div><p>Total: $${d.get('labelPrice')}</p><p class="mt-2 pt-2 border-t">${d.get('label-payment-method')}</p>`;
             labelsContainer.appendChild(label);
-            labelForm.reset(); labelProductsList.innerHTML=''; 
+            labelForm.reset(); labelProductsList.innerHTML=''; addLabelProductLine();
         });
 
         function showMessage(msg, type) {
@@ -464,12 +526,12 @@
             messageDiv.className = `flex-grow p-4 rounded-lg text-center text-sm ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
         }
 
-        // Init
         document.getElementById('productoIngreso').innerHTML = productOptionsTemplate.innerHTML;
         toggleInventoryForms();
         inventoryForm.addEventListener('submit', handleFormSubmit);
         expenseForm.addEventListener('submit', handleFormSubmit);
         clientForm.addEventListener('submit', handleFormSubmit);
+        addLabelProductLine();
 
     </script>
 </body>
