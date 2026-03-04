@@ -339,7 +339,6 @@
                     json.consignments.forEach(c => {
                         const opt = document.createElement('option');
                         opt.value = JSON.stringify(c);
-                        // MOSTRAR FECHA EN EL SELECTOR
                         opt.textContent = `[${c.fecha}] ${c.cliente} | ${c.producto} (${c.cantidad})`;
                         sel.appendChild(opt);
                     });
@@ -392,25 +391,29 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="text-[10px] font-bold text-slate-600 block mb-1">FACTURAR (VENTA):</label>
-                            <input type="number" oninput="updateLiqData(${index}, 'cantV', this.value)" class="w-full p-2 border border-slate-300 rounded text-sm focus:ring-1 focus:ring-sky-500" placeholder="0">
+                            <input type="number" value="${item.cantV}" oninput="updateLiqData(${index}, 'cantV', this.value)" class="w-full p-2 border border-slate-300 rounded text-sm focus:ring-1 focus:ring-sky-500" placeholder="0">
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-slate-600 block mb-1">DEVOLVER (BODEGA):</label>
-                            <input type="number" oninput="updateLiqData(${index}, 'cantD', this.value)" class="w-full p-2 border border-slate-300 rounded text-sm focus:ring-1 focus:ring-sky-500" placeholder="0">
+                            <input type="number" value="${item.cantD}" oninput="updateLiqData(${index}, 'cantD', this.value)" class="w-full p-2 border border-slate-300 rounded text-sm focus:ring-1 focus:ring-sky-500" placeholder="0">
                         </div>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end border-t pt-2">
                         <div class="col-span-1">
                             <label class="text-[10px] font-bold text-slate-600 block mb-1">PRECIO UNITARIO:</label>
-                            <input type="number" step="0.01" oninput="updateLiqData(${index}, 'pUnit', this.value)" class="w-full p-2 border border-slate-300 rounded text-sm" placeholder="$ 0.00">
+                            <input type="number" step="0.01" value="${item.pUnit}" oninput="updateLiqData(${index}, 'pUnit', this.value)" class="w-full p-2 border border-slate-300 rounded text-sm" placeholder="$ 0.00">
                         </div>
                         <div class="col-span-2 flex items-center flex-wrap gap-4 pb-1">
-                            <label class="flex items-center text-[10px] font-semibold cursor-pointer"><input type="checkbox" checked onchange="updateLiqData(${index}, 'iva', this.checked)" class="mr-1"> IVA (13%)</label>
+                            <label class="flex items-center text-[10px] font-semibold cursor-pointer"><input type="checkbox" ${item.iva ? 'checked' : ''} onchange="updateLiqData(${index}, 'iva', this.checked)" class="mr-1"> IVA (13%)</label>
                             <div class="flex items-center gap-2">
-                                <label class="flex items-center text-[10px] font-semibold cursor-pointer"><input type="checkbox" id="checkPos${index}" onchange="togglePosInput(${index}, this.checked)" class="mr-1"> POS</label>
-                                <input type="number" id="inputPos${index}" placeholder="%" value="3.5" oninput="updateLiqData(${index}, 'cPOS', this.value)" class="w-14 p-1 border rounded text-[10px] hidden">
+                                <label class="flex items-center text-[10px] font-semibold cursor-pointer"><input type="checkbox" id="checkPos${index}" ${item.pos ? 'checked' : ''} onchange="togglePosInput(${index}, this.checked)" class="mr-1"> POS</label>
+                                <input type="number" id="inputPos${index}" placeholder="%" value="${item.cPOS}" oninput="updateLiqData(${index}, 'cPOS', this.value)" class="w-14 p-1 border rounded text-[10px] ${item.pos ? '' : 'hidden'}">
                             </div>
                         </div>
+                    </div>
+                    <div class="text-right border-t pt-1">
+                        <span class="text-[10px] text-slate-400">Subtotal Línea:</span>
+                        <span class="text-sm font-bold text-slate-800">$${((item.cantV || 0) * (item.pUnit || 0)).toFixed(2)}</span>
                     </div>
                 `;
                 container.appendChild(div);
@@ -419,6 +422,10 @@
 
         window.updateLiqData = (index, field, value) => {
             itemsALiquidar[index][field] = value;
+            // Refrescar solo si es necesario mostrar el subtotal actualizado
+            if(field === 'cantV' || field === 'pUnit') {
+                renderListaLiquidacion();
+            }
         };
 
         window.removerItemLiq = (index) => {
@@ -427,8 +434,8 @@
         };
 
         window.togglePosInput = (index, isChecked) => {
-            document.getElementById('inputPos' + index).classList.toggle('hidden', !isChecked);
             itemsALiquidar[index].pos = isChecked;
+            renderListaLiquidacion();
         };
 
         document.getElementById('refreshConsignasBtn').addEventListener('click', loadConsignments);
@@ -442,6 +449,7 @@
 
             const fd = new FormData(e.target);
             const mov = fd.get('mainMovementType');
+            const generalDesc = fd.get('descripcionVenta') || '';
             let data = { formType: 'inventory', tipoMovimiento: mov };
 
             if (mov === 'GestionarConsigna') {
@@ -449,23 +457,26 @@
                     showMessage('No hay productos seleccionados para liquidar.', 'error');
                     loader.style.display = 'none'; return;
                 }
+                
+                // Mapeo robusto: convertimos explícitamente a números antes de enviar
                 data.liquidaciones = itemsALiquidar.map(i => ({
                     idConsigna: i.idConsigna,
-                    cantV: i.cantV,
-                    cantD: i.cantD,
-                    pUnit: i.pUnit,
+                    cantV: Number(i.cantV) || 0,
+                    cantD: Number(i.cantD) || 0,
+                    pUnit: Number(i.pUnit) || 0,
                     incluyeIVA: i.iva,
                     pagoConPOS: i.pos,
-                    cPOS: i.cPOS,
-                    desc: i.desc
+                    cPOS: Number(i.cPOS) || 0,
+                    desc: generalDesc // Usamos la descripción general para todos los registros
                 }));
             } else if (mov === 'Ingreso') {
-                data.producto = fd.get('producto'); data.cantidad = fd.get('cantidad');
+                data.producto = fd.get('producto'); 
+                data.cantidad = Number(fd.get('cantidad')) || 0;
             } else {
                 const lines = Array.from(document.querySelectorAll('.product-line')).map(l => ({
                     producto: l.querySelector('[name="producto"]').value,
-                    cantidad: l.querySelector('[name="cantidad"]').value,
-                    precioUnitario: l.querySelector('[name="precioUnitario"]').value,
+                    cantidad: Number(l.querySelector('[name="cantidad"]').value) || 0,
+                    precioUnitario: Number(l.querySelector('[name="precioUnitario"]').value) || 0,
                     incluyeIVA: l.querySelector('[name="incluyeIVA"]')?.checked || true
                 }));
                 data.productos = lines;
@@ -474,10 +485,10 @@
                 data.numeroFactura = fd.get('numeroFactura');
                 data.esMuestra = fd.get('esMuestra') === 'on';
                 data.pagoConPOS = fd.get('pagoConPOS') === 'on';
-                data.comisionPOS = fd.get('comisionPOS');
+                data.comisionPOS = Number(fd.get('comisionPOS')) || 0;
                 data.incluyeDelivery = fd.get('incluyeDelivery') === 'on';
-                data.montoDelivery = fd.get('montoDelivery');
-                data.descripcionVenta = fd.get('descripcionVenta');
+                data.montoDelivery = Number(fd.get('montoDelivery')) || 0;
+                data.descripcionVenta = generalDesc;
             }
 
             try {
