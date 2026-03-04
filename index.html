@@ -128,7 +128,7 @@
                         <div><label class="block text-sm font-medium text-slate-700 mb-1">Descripción:</label><textarea id="descripcionVenta" name="descripcionVenta" rows="2" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500"></textarea></div>
                     </div>
 
-                    <!-- 3. Gestionar Consigna (Nueva UI Multi-selección) -->
+                    <!-- 3. Gestionar Consigna -->
                     <div id="formGestionConsigna" class="hidden space-y-6">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg font-semibold text-slate-700">Seleccionar Consignas</h3>
@@ -391,29 +391,29 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="text-[10px] font-bold text-slate-600 block mb-1">FACTURAR (VENTA):</label>
-                            <input type="number" value="${item.cantV}" oninput="updateLiqData(${index}, 'cantV', this.value)" class="w-full p-2 border border-slate-300 rounded text-sm focus:ring-1 focus:ring-sky-500" placeholder="0">
+                            <input type="number" step="any" value="${item.cantV || ''}" oninput="updateLiqData(${index}, 'cantV', this.value)" class="w-full p-2 border border-slate-300 rounded text-sm focus:ring-1 focus:ring-sky-500" placeholder="0">
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-slate-600 block mb-1">DEVOLVER (BODEGA):</label>
-                            <input type="number" value="${item.cantD}" oninput="updateLiqData(${index}, 'cantD', this.value)" class="w-full p-2 border border-slate-300 rounded text-sm focus:ring-1 focus:ring-sky-500" placeholder="0">
+                            <input type="number" step="any" value="${item.cantD || ''}" oninput="updateLiqData(${index}, 'cantD', this.value)" class="w-full p-2 border border-slate-300 rounded text-sm focus:ring-1 focus:ring-sky-500" placeholder="0">
                         </div>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end border-t pt-2">
                         <div class="col-span-1">
                             <label class="text-[10px] font-bold text-slate-600 block mb-1">PRECIO UNITARIO:</label>
-                            <input type="number" step="0.01" value="${item.pUnit}" oninput="updateLiqData(${index}, 'pUnit', this.value)" class="w-full p-2 border border-slate-300 rounded text-sm" placeholder="$ 0.00">
+                            <input type="number" step="any" value="${item.pUnit || ''}" oninput="updateLiqData(${index}, 'pUnit', this.value)" class="w-full p-2 border border-slate-300 rounded text-sm" placeholder="$ 0.00">
                         </div>
                         <div class="col-span-2 flex items-center flex-wrap gap-4 pb-1">
                             <label class="flex items-center text-[10px] font-semibold cursor-pointer"><input type="checkbox" ${item.iva ? 'checked' : ''} onchange="updateLiqData(${index}, 'iva', this.checked)" class="mr-1"> IVA (13%)</label>
                             <div class="flex items-center gap-2">
                                 <label class="flex items-center text-[10px] font-semibold cursor-pointer"><input type="checkbox" id="checkPos${index}" ${item.pos ? 'checked' : ''} onchange="togglePosInput(${index}, this.checked)" class="mr-1"> POS</label>
-                                <input type="number" id="inputPos${index}" placeholder="%" value="${item.cPOS}" oninput="updateLiqData(${index}, 'cPOS', this.value)" class="w-14 p-1 border rounded text-[10px] ${item.pos ? '' : 'hidden'}">
+                                <input type="number" step="any" id="inputPos${index}" placeholder="%" value="${item.cPOS}" oninput="updateLiqData(${index}, 'cPOS', this.value)" class="w-14 p-1 border rounded text-[10px] ${item.pos ? '' : 'hidden'}">
                             </div>
                         </div>
                     </div>
                     <div class="text-right border-t pt-1">
                         <span class="text-[10px] text-slate-400">Subtotal Línea:</span>
-                        <span class="text-sm font-bold text-slate-800">$${((item.cantV || 0) * (item.pUnit || 0)).toFixed(2)}</span>
+                        <span id="subtotalText-${index}" class="text-sm font-bold text-slate-800">$${((Number(item.cantV) || 0) * (Number(item.pUnit) || 0)).toFixed(2)}</span>
                     </div>
                 `;
                 container.appendChild(div);
@@ -422,9 +422,14 @@
 
         window.updateLiqData = (index, field, value) => {
             itemsALiquidar[index][field] = value;
-            // Refrescar solo si es necesario mostrar el subtotal actualizado
+            // ACTUALIZACIÓN DIRECTA DEL DOM: No llamamos a renderListaLiquidacion para no perder el foco del teclado en iPad
             if(field === 'cantV' || field === 'pUnit') {
-                renderListaLiquidacion();
+                const subtotalEl = document.getElementById(`subtotalText-${index}`);
+                if (subtotalEl) {
+                    const q = parseFloat(itemsALiquidar[index].cantV) || 0;
+                    const p = parseFloat(itemsALiquidar[index].pUnit) || 0;
+                    subtotalEl.innerText = `$${(q * p).toFixed(2)}`;
+                }
             }
         };
 
@@ -435,7 +440,8 @@
 
         window.togglePosInput = (index, isChecked) => {
             itemsALiquidar[index].pos = isChecked;
-            renderListaLiquidacion();
+            const inputEl = document.getElementById('inputPos' + index);
+            if (inputEl) inputEl.classList.toggle('hidden', !isChecked);
         };
 
         document.getElementById('refreshConsignasBtn').addEventListener('click', loadConsignments);
@@ -457,8 +463,6 @@
                     showMessage('No hay productos seleccionados para liquidar.', 'error');
                     loader.style.display = 'none'; return;
                 }
-                
-                // Mapeo robusto: convertimos explícitamente a números antes de enviar
                 data.liquidaciones = itemsALiquidar.map(i => ({
                     idConsigna: i.idConsigna,
                     cantV: Number(i.cantV) || 0,
@@ -467,7 +471,7 @@
                     incluyeIVA: i.iva,
                     pagoConPOS: i.pos,
                     cPOS: Number(i.cPOS) || 0,
-                    desc: generalDesc // Usamos la descripción general para todos los registros
+                    desc: generalDesc 
                 }));
             } else if (mov === 'Ingreso') {
                 data.producto = fd.get('producto'); 
@@ -507,7 +511,7 @@
             } catch(err) { showMessage('Error de conexión con el servidor', 'error'); loader.style.display = 'none'; }
         });
 
-        // Forms Gastos y Comercios
+        // Simple Forms
         [document.getElementById('expenseForm'), document.getElementById('clientForm')].forEach(form => {
             form.addEventListener('submit', async e => {
                 e.preventDefault();
@@ -572,7 +576,6 @@
         document.getElementById('print-btn').addEventListener('click', () => window.print());
         document.getElementById('clear-btn').addEventListener('click', () => document.getElementById('labels-container').innerHTML = '');
 
-        // --- HELPERS ---
         function showMessage(msg, type) {
             const m = document.getElementById('message');
             m.textContent = msg;
@@ -590,7 +593,7 @@
                 if (json.success && json.clients.length > 0) {
                     sel.innerHTML = '<option value="" disabled selected>Seleccione un comercio...</option>';
                     json.clients.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
-                } else sel.innerHTML = '<option disabled>No hay clientes registrados</option>';
+                } else sel.innerHTML = '<option disabled>No hay clientes</option>';
             } catch(e) { sel.innerHTML = '<option disabled>Error</option>'; }
         }
 
@@ -605,7 +608,6 @@
         document.getElementById('pagoConPOS').addEventListener('change', e => document.getElementById('posFields').classList.toggle('hidden', !e.target.checked));
         document.getElementById('incluyeDelivery').addEventListener('change', e => document.getElementById('deliveryFields').classList.toggle('hidden', !e.target.checked));
 
-        // Init
         document.getElementById('productoIngreso').innerHTML = productOptionsTemplate.innerHTML;
         addLabelProductLine();
         toggleInventoryForms();
