@@ -65,7 +65,7 @@
                         </div>
                     </div>
 
-                    <!-- Sub-opciones Consigna -->
+                    <!-- Sub-opciones Consigna (Opcional visualmente) -->
                     <div id="consignaOptions" class="hidden bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-2">
                         <p class="text-sm font-semibold text-blue-800 mb-2">Seleccione:</p>
                         <label class="flex items-center"><input type="radio" name="consignaType" value="ConsignacionSalida" class="form-radio h-4 w-4 text-blue-600" checked><span class="ml-2 text-sm">Salida de Producto</span></label>
@@ -110,7 +110,7 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Número de Factura:</label>
+                                <label class="block text-sm font-medium text-slate-700 mb-1" id="lblFactura">Número de Factura:</label>
                                 <input type="text" id="numeroFactura" name="numeroFactura" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: 001-001">
                             </div>
                         </div>
@@ -124,11 +124,11 @@
                         <div id="containerExtrasVenta">
                             <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
                                 <div class="flex items-center mb-2"><input type="checkbox" id="pagoConPOS" name="pagoConPOS" class="h-5 w-5 text-sky-600 rounded"><label for="pagoConPOS" class="ml-2 block text-sm font-medium text-slate-700">Venta con POS</label></div>
-                                <div id="posFields" class="hidden ml-7 mt-2"><label class="block text-sm font-medium text-slate-700 mb-1">% Comisión POS:</label><input type="number" id="comisionPOS" name="comisionPOS" step="0.01" class="w-32 p-2 border border-slate-300 rounded-md text-sm" placeholder="Ej: 3"></div>
+                                <div id="posFields" class="hidden ml-7 mt-2"><label class="block text-sm font-medium text-slate-700 mb-1">% Comisión POS:</label><input type="number" id="comisionPOS" name="comisionPOS" step="0.01" min="0" max="100" class="w-32 p-2 border border-slate-300 rounded-md text-sm" placeholder="Ej: 3"></div>
                             </div>
                             <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                                 <div class="flex items-center mb-2"><input type="checkbox" id="incluyeDelivery" name="incluyeDelivery" class="h-5 w-5 text-sky-600 rounded"><label for="incluyeDelivery" class="ml-2 block text-sm font-medium text-slate-700">Incluir Delivery</label></div>
-                                <div id="deliveryFields" class="hidden ml-7 mt-2"><label class="block text-sm font-medium text-slate-700 mb-1">Monto Delivery ($):</label><input type="number" id="montoDelivery" name="montoDelivery" step="0.01" class="w-32 p-2 border border-slate-300 rounded-md text-sm" placeholder="0.00"></div>
+                                <div id="deliveryFields" class="hidden ml-7 mt-2"><label class="block text-sm font-medium text-slate-700 mb-1">Monto Delivery ($):</label><input type="number" id="montoDelivery" name="montoDelivery" step="0.01" min="0" class="w-32 p-2 border border-slate-300 rounded-md text-sm" placeholder="0.00"></div>
                             </div>
                         </div>
 
@@ -137,14 +137,26 @@
                         <div><label class="block text-sm font-medium text-slate-700 mb-1">Descripción:</label><textarea id="descripcionVenta" name="descripcionVenta" rows="2" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500"></textarea></div>
                     </div>
 
-                    <!-- 3. Gestionar Consigna -->
+                    <!-- 3. Gestionar Consigna (CORREGIDO LOS NOMBRES DE VARIABLES) -->
                     <div id="formGestionConsigna" class="hidden space-y-6">
-                        <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-semibold text-slate-700">Consignaciones Activas</h3><button type="button" id="refreshConsignasBtn" class="text-sm text-sky-600 hover:text-sky-800">Actualizar ↻</button></div>
+                        <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-semibold text-slate-700">Consignaciones Activas</h3><button type="button" id="refreshConsignasBtn" class="text-sm text-sky-600 hover:text-sky-800 font-bold">Actualizar Lista ↻</button></div>
                         <div><select id="consignaSelect" name="idConsigna" class="w-full p-3 border border-slate-300 rounded-lg"><option value="" disabled selected>Cargando...</option></select></div>
                         <div id="consignaDetails" class="hidden p-4 bg-yellow-50 rounded-lg border border-yellow-200"><p class="text-sm text-yellow-800"><strong>Producto:</strong> <span id="consProd"></span></p><p class="text-sm text-yellow-800"><strong>Pendiente:</strong> <span id="consQty"></span> unidades</p></div>
-                        <div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-slate-700 mb-1">Facturar:</label><input type="number" id="cantVentaConsigna" name="cantVentaConsigna" min="0" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0"></div><div><label class="block text-sm font-medium text-slate-700 mb-1">Devolver:</label><input type="number" id="cantDevolucionConsigna" name="cantDevolucionConsigna" min="0" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0"></div></div>
-                        <div id="consignaPrecioFields" class="hidden bg-slate-50 p-4 rounded-lg border border-slate-200"><div class="grid grid-cols-2 gap-4 mb-3"><div><label class="block text-sm font-medium text-slate-700 mb-1">Precio Unit.:</label><input type="number" id="precioUnitarioConsigna" name="precioUnitarioConsigna" step="0.01" min="0" class="w-full p-2 border border-slate-300 rounded-md"></div><div class="flex items-center pt-6"><input type="checkbox" id="ivaConsigna" name="incluyeIVA" checked class="h-4 w-4 text-sky-600 rounded"><label for="ivaConsigna" class="ml-2 text-sm text-slate-700">Incluye IVA</label></div></div><div class="flex items-center mb-2"><input type="checkbox" id="posConsigna" name="pagoConPOS" class="h-4 w-4 text-sky-600 rounded"><label for="posConsigna" class="ml-2 text-sm text-slate-700">Pago con POS</label></div><div id="posFieldsConsigna" class="hidden ml-6"><label class="text-sm font-medium text-slate-700">% Comisión:</label><input type="number" id="comisionPOSConsigna" name="comisionPOS" class="w-20 p-1 border border-slate-300 rounded text-sm ml-2"></div></div>
-                        <div><label class="block text-sm font-medium text-slate-700 mb-1">Nota:</label><input type="text" id="descConsigna" name="descripcionVenta" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Detalle opcional"></div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">Facturar (Vendidas):</label><input type="number" id="cantVentaConsigna" name="cantVentaConsigna" min="0" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">Devolver (Retorno):</label><input type="number" id="cantDevolucionConsigna" name="cantDevolucionConsigna" min="0" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0"></div>
+                        </div>
+                        
+                        <div id="consignaPrecioFields" class="hidden bg-slate-50 p-4 rounded-lg border border-slate-200">
+                             <div class="grid grid-cols-2 gap-4 mb-3">
+                                <div><label class="block text-sm font-medium text-slate-700 mb-1">Precio Unit.:</label><input type="number" id="precioUnitarioConsigna" name="precioUnitarioConsigna" step="0.01" min="0" class="w-full p-2 border border-slate-300 rounded-md"></div>
+                                <div class="flex items-center pt-6"><input type="checkbox" id="ivaConsigna" name="ivaConsignaCheck" checked class="h-4 w-4 text-sky-600 rounded"><label for="ivaConsigna" class="ml-2 text-sm text-slate-700">Incluye IVA</label></div>
+                             </div>
+                             <div class="flex items-center mb-2"><input type="checkbox" id="posConsigna" name="posConsignaCheck" class="h-4 w-4 text-sky-600 rounded"><label for="posConsigna" class="ml-2 text-sm text-slate-700">Pago con POS</label></div>
+                             <div id="posFieldsConsigna" class="hidden ml-6"><label class="text-sm font-medium text-slate-700">% Comisión:</label><input type="number" id="comisionPOSConsigna" name="comisionPOSConsigna" class="w-20 p-1 border border-slate-300 rounded text-sm ml-2"></div>
+                        </div>
+                        <div><label class="block text-sm font-medium text-slate-700 mb-1">Nota (Opcional):</label><input type="text" id="descConsigna" name="descConsigna" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Detalle adicional"></div>
                     </div>
                 </div>
                 <div class="flex items-center justify-end pt-6"><button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md">Procesar</button></div>
@@ -177,7 +189,6 @@
 
         <!-- PESTAÑA ETIQUETAS -->
         <div id="labelsContent" class="hidden">
-             <!-- (Contenido igual al anterior) -->
              <p class="text-slate-600 mb-6">Completa los datos para la etiqueta.</p>
             <form id="label-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                  <div><label class="block text-sm font-medium text-slate-700">Nombre</label><input type="text" id="labelName" required class="w-full px-3 py-2 border border-slate-300 rounded-md"></div>
@@ -252,6 +263,7 @@
         const divComercioSelect = document.getElementById('divComercioSelect');
         const clienteComercioSelect = document.getElementById('clienteComercio');
         const btnRefreshClients = document.getElementById('btnRefreshClients');
+        const lblFactura = document.getElementById('lblFactura');
 
         // Gestion Consigna UI
         const consignaSelect = document.getElementById('consignaSelect');
@@ -303,9 +315,15 @@
             if (['Venta', 'ConsignacionSalida'].includes(movType)) {
                 if (productLinesContainer.children.length === 0) addProductLine();
                 const isConsignaSalida = movType === 'ConsignacionSalida';
-                document.getElementById('containerPOS').classList.toggle('hidden', isConsignaSalida);
-                document.getElementById('containerDelivery').classList.toggle('hidden', isConsignaSalida);
+                
+                document.getElementById('containerExtrasVenta').classList.toggle('hidden', isConsignaSalida);
                 document.getElementById('divMuestra').classList.toggle('hidden', isConsignaSalida);
+                
+                lblFactura.textContent = isConsignaSalida ? "Cliente / Empresa:" : "Número de Factura:";
+                document.getElementById('numeroFactura').placeholder = isConsignaSalida ? "Nombre del Cliente o Empresa" : "Ej: 001-001";
+                
+                // Ocultar precio en líneas si es Consignación Salida
+                document.querySelectorAll('.price-field').forEach(el => el.classList.toggle('invisible', isConsignaSalida));
             }
             if (movType === 'GestionarConsigna') {
                 loadConsignments();
@@ -345,7 +363,7 @@
         pagoConPOSCheckbox.addEventListener('change', () => posFields.classList.toggle('hidden', !pagoConPOSCheckbox.checked));
         incluyeDeliveryCheckbox.addEventListener('change', () => deliveryFields.classList.toggle('hidden', !incluyeDeliveryCheckbox.checked));
 
-        // --- GESTIÓN CONSIGNA ---
+        // --- GESTIÓN CONSIGNA LOGIC ---
         async function loadConsignments() {
             consignaSelect.innerHTML = '<option>Cargando...</option>';
             try {
@@ -362,7 +380,7 @@
                 } else {
                     consignaSelect.innerHTML = '<option disabled>No hay consignaciones pendientes</option>';
                 }
-            } catch (e) { consignaSelect.innerHTML = '<option>Error al cargar</option>'; }
+            } catch (e) { consignaSelect.innerHTML = '<option disabled>Error al cargar</option>'; }
         }
         refreshConsignasBtn.addEventListener('click', loadConsignments);
         
@@ -380,11 +398,13 @@
 
         posConsigna.addEventListener('change', () => posFieldsConsigna.classList.toggle('hidden', !posConsigna.checked));
 
-
         function addProductLine() {
             const div = document.createElement('div');
             div.className = 'product-line grid grid-cols-12 gap-x-2 gap-y-3 items-start border-t pt-3';
-            div.innerHTML = `<div class="col-span-12 sm:col-span-4"><select name="producto" class="w-full p-2 border border-slate-300 rounded-md shadow-sm">${productOptionsTemplate.innerHTML}</select><div class="stock-display text-right text-xs text-slate-500 font-semibold h-4 mt-1 pr-1"></div></div><div class="col-span-4 sm:col-span-2"><input type="number" name="cantidad" min="1" placeholder="Cant." class="w-full p-2 border border-slate-300 rounded-md shadow-sm"></div><div class="col-span-8 sm:col-span-2"><input type="number" name="precioUnitario" step="0.01" min="0" placeholder="P. Unit." class="w-full p-2 border border-slate-300 rounded-md shadow-sm"></div><div class="col-span-8 sm:col-span-3"><input type="text" name="subtotal" readonly class="w-full p-2 bg-slate-100 border-slate-300 rounded-md text-right font-medium" value="$0.00"></div><div class="col-span-4 sm:col-span-1 flex items-center justify-end space-x-2"><div class="flex flex-col items-center mr-2"><input type="checkbox" name="incluyeIVA" checked class="h-4 w-4 text-sky-600 rounded"><label class="text-[10px]">IVA</label></div><button type="button" class="remove-product-btn text-red-500 font-bold p-1 leading-none h-6 w-6">✕</button></div>`;
+            const isConsignaSalida = document.querySelector('input[name="mainMovementType"]:checked').value === 'ConsignacionSalida';
+            const hideClass = isConsignaSalida ? 'invisible' : '';
+
+            div.innerHTML = `<div class="col-span-12 sm:col-span-4"><select name="producto" class="w-full p-2 border border-slate-300 rounded-md shadow-sm">${productOptionsTemplate.innerHTML}</select><div class="stock-display text-right text-xs text-slate-500 font-semibold h-4 mt-1 pr-1"></div></div><div class="col-span-4 sm:col-span-2"><input type="number" name="cantidad" min="1" placeholder="Cant." class="w-full p-2 border border-slate-300 rounded-md shadow-sm"></div><div class="col-span-8 sm:col-span-2 price-field ${hideClass}"><input type="number" name="precioUnitario" step="0.01" min="0" placeholder="P. Unit." class="w-full p-2 border border-slate-300 rounded-md shadow-sm"></div><div class="col-span-8 sm:col-span-3 price-field ${hideClass}"><input type="text" name="subtotal" readonly class="w-full p-2 bg-slate-100 border-slate-300 rounded-md text-right font-medium" value="$0.00"></div><div class="col-span-4 sm:col-span-1 flex items-center justify-end space-x-2"><div class="price-field ${hideClass} flex flex-col items-center mr-2"><input type="checkbox" name="incluyeIVA" checked class="h-4 w-4 text-sky-600 rounded"><label class="text-[10px]">IVA</label></div><button type="button" class="remove-product-btn text-red-500 font-bold p-1 leading-none h-6 w-6">✕</button></div>`;
             productLinesContainer.appendChild(div);
         }
         
@@ -417,33 +437,33 @@
             } catch(e) { el.textContent='Err'; }
         }
 
-        // --- SUBMIT ---
+        // --- SUBMIT MAIN ---
         async function handleFormSubmit(e) {
             e.preventDefault();
             if (e.target.id === 'label-form') return;
             loader.style.display = 'block'; messageDiv.textContent = '';
             
             const formData = new FormData(e.target);
-            let data = { formType: e.target.id.replace('Form', '') };
+            let data = { formType: e.target.id.replace('Form', '') }; 
             
             if (data.formType === 'inventory') {
                 data.tipoMovimiento = formData.get('mainMovementType');
                 if (data.tipoMovimiento === 'GestionarConsigna') {
-                    // Datos gestión consigna
+                    // Datos gestión consigna aislados con nombres únicos
                     const selectedOption = consignaSelect.options[consignaSelect.selectedIndex];
-                    if(!selectedOption || !selectedOption.value) { showMessage('Seleccione una consigna', 'error'); loader.style.display='none'; return; }
+                    if(!selectedOption || !selectedOption.value) { showMessage('Seleccione una consigna pendiente', 'error'); loader.style.display='none'; return; }
                     const consData = JSON.parse(selectedOption.value);
                     data.idConsigna = consData.id;
                     data.cantidadVenta = formData.get('cantVentaConsigna');
                     data.cantidadDevolucion = formData.get('cantDevolucionConsigna');
                     data.precioUnitario = formData.get('precioUnitarioConsigna');
-                    data.incluyeIVA = formData.get('incluyeIVA') === 'on';
-                    data.pagoConPOS = formData.get('pagoConPOS') === 'on';
-                    data.comisionPOS = formData.get('comisionPOS');
-                    data.descripcionVenta = formData.get('descripcionVenta');
+                    data.incluyeIVA = formData.get('ivaConsignaCheck') === 'on';
+                    data.pagoConPOS = formData.get('posConsignaCheck') === 'on';
+                    data.comisionPOS = formData.get('comisionPOSConsigna');
+                    data.descripcionVenta = formData.get('descConsigna');
                 }
                 else if (data.tipoMovimiento !== 'Ingreso') {
-                    // Logic for Venta/ConsignaSalida
+                    // Venta o ConsignaSalida
                     const lines = Array.from(document.querySelectorAll('.product-line')).map(l => ({
                         producto: l.querySelector('select[name="producto"]').value,
                         cantidad: l.querySelector('input[name="cantidad"]').value,
@@ -467,7 +487,7 @@
                         data.incluyeDelivery = formData.get('incluyeDelivery') === 'on';
                         data.montoDelivery = formData.get('montoDelivery');
                     } else {
-                         data.nombreCliente = formData.get('numeroFactura'); 
+                         data.nombreCliente = formData.get('numeroFactura'); // En Salida, el campo factura funciona como nombre 
                     }
                 } else if (data.tipoMovimiento === 'Ingreso') {
                     data.producto = formData.get('producto');
@@ -485,13 +505,14 @@
                 if (json.success) {
                     showMessage(json.message, 'success');
                     e.target.reset();
-                    if(data.formType === 'inventory' && data.tipoMovimiento === 'Venta') {
+                    if(data.formType === 'inventory' && (data.tipoMovimiento === 'Venta' || data.tipoMovimiento === 'ConsignacionSalida')) {
                         productLinesContainer.innerHTML = ''; addProductLine(); updateSaleTotal();
                         posFields.classList.add('hidden'); deliveryFields.classList.add('hidden');
                     }
                     if(data.tipoMovimiento === 'GestionarConsigna') {
-                        document.getElementById('consignaDetails').classList.add('hidden');
-                        document.getElementById('consignaPrecioFields').classList.add('hidden');
+                        consignaDetails.classList.add('hidden');
+                        consignaPrecioFields.classList.add('hidden');
+                        posFieldsConsigna.classList.add('hidden');
                         loadConsignments();
                     }
                 } else { showMessage(json.error, 'error'); }
@@ -526,6 +547,7 @@
             messageDiv.className = `flex-grow p-4 rounded-lg text-center text-sm ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
         }
 
+        // Init
         document.getElementById('productoIngreso').innerHTML = productOptionsTemplate.innerHTML;
         toggleInventoryForms();
         inventoryForm.addEventListener('submit', handleFormSubmit);
