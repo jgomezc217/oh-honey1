@@ -13,13 +13,9 @@
         .tab-button.active { border-bottom-color: #3b82f6; color: #1e40af; font-weight: 600; }
         .product-line .remove-product-btn { display: none; }
         .product-line:not(:first-child) .remove-product-btn { display: inline-flex; }
-        /* Estilos etiquetas */
         #labels-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 1cm; width: 100%; max-width: 21cm; min-height: 29.7cm; background-color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 2rem auto; border-radius: 8px; }
         .label { border: 1px dashed #9ca3af; padding: 12px; border-radius: 8px; overflow-wrap: break-word; display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; line-height: 1.4; }
-        .label p, .label div { margin: 0; }
-        .label strong { font-weight: 600; color: #1f2937; }
-        @media print { @page { size: auto; margin: 0.5cm; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: #ffffff !important; } #main-form-container, .non-printable { display: none !important; } #print-area, #labels-container { margin: 0; padding: 0; width: 100%; min-height: 0; box-shadow: none; border: none; border-radius: 0; background-color: transparent !important; } .label { page-break-inside: avoid; border: 1px solid #6b7280; } }
-        @media (max-width: 768px) { #labels-container { min-height: auto; padding: 1rem; } }
+        @media print { @page { size: auto; margin: 0.5cm; } body { print-color-adjust: exact; background-color: white !important; } #main-form-container, .non-printable { display: none !important; } #print-area, #labels-container { margin: 0; padding: 0; width: 100%; box-shadow: none; border: none; } .label { page-break-inside: avoid; border: 1px solid #6b7280; } }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen p-4">
@@ -38,7 +34,6 @@
             </nav>
         </div>
 
-        <!-- PESTAÑA INVENTARIO -->
         <div id="inventoryContent">
             <form id="inventoryForm">
                 <input type="hidden" name="formType" value="inventory">
@@ -65,495 +60,308 @@
                         </div>
                     </div>
 
-                    <!-- Sub-opciones Consigna (Opcional visualmente) -->
-                    <div id="consignaOptions" class="hidden bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-2">
-                        <p class="text-sm font-semibold text-blue-800 mb-2">Seleccione:</p>
-                        <label class="flex items-center"><input type="radio" name="consignaType" value="ConsignacionSalida" class="form-radio h-4 w-4 text-blue-600" checked><span class="ml-2 text-sm">Salida de Producto</span></label>
-                    </div>
-
-                    <!-- Form Ingreso -->
                     <div id="formIngreso" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Producto:</label>
                             <div class="flex items-center space-x-3">
                                 <select id="productoIngreso" name="producto" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500"></select>
-                                <div id="stockIngreso" class="text-right text-sm text-slate-500 font-semibold h-5 mt-1 pr-1 w-24"></div>
+                                <div id="stockIngreso" class="text-right text-sm text-slate-500 font-semibold w-24"></div>
                             </div>
                         </div>
-                        <div><label class="block text-sm font-medium text-slate-700 mb-1">Cantidad:</label><input type="number" id="cantidadIngreso" name="cantidad" min="1" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: 10"></div>
+                        <div><label class="block text-sm font-medium text-slate-700 mb-1">Cantidad:</label><input type="number" name="cantidad" min="1" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500"></div>
                     </div>
 
-                    <!-- Form Venta -->
                     <div id="formVenta" class="hidden space-y-6">
-                        <!-- Selección Destino Venta -->
                         <div class="bg-yellow-50 border border-yellow-100 p-4 rounded-lg">
-                            <label class="block text-sm font-medium text-yellow-800 mb-2">Destino de la Venta:</label>
+                            <label class="block text-sm font-medium text-yellow-800 mb-2">Destino:</label>
                             <div class="flex gap-4">
-                                <label class="flex items-center cursor-pointer"><input type="radio" name="ventaDestino" value="Delivery" class="form-radio h-4 w-4 text-yellow-600" checked><span class="ml-2 text-sm text-yellow-900">Cliente Final / Delivery</span></label>
-                                <label class="flex items-center cursor-pointer"><input type="radio" name="ventaDestino" value="Comercio" class="form-radio h-4 w-4 text-yellow-600"><span class="ml-2 text-sm text-yellow-900">Comercio</span></label>
+                                <label class="flex items-center cursor-pointer"><input type="radio" name="ventaDestino" value="Delivery" checked><span class="ml-2 text-sm">Delivery</span></label>
+                                <label class="flex items-center cursor-pointer"><input type="radio" name="ventaDestino" value="Comercio"><span class="ml-2 text-sm">Comercio</span></label>
                             </div>
                         </div>
 
-                        <!-- Info Cliente -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                            <div id="divNombreCliente">
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Nombre Cliente:</label>
-                                <input type="text" id="nombreClienteDelivery" name="nombreClienteDelivery" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: Juan Pérez">
-                            </div>
-                            <div id="divComercioSelect" class="hidden">
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Seleccionar Comercio:</label>
-                                <div class="flex space-x-2">
-                                    <select id="clienteComercio" name="clienteComercio" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500">
-                                        <option value="" disabled selected>Cargando...</option>
-                                    </select>
-                                    <button type="button" id="btnRefreshClients" class="text-sky-600 hover:text-sky-800 text-sm">↻</button>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1" id="lblFactura">Número de Factura:</label>
-                                <input type="text" id="numeroFactura" name="numeroFactura" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Ej: 001-001">
-                            </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div id="divNombreCliente"><label class="block text-sm font-medium">Cliente:</label><input type="text" id="nombreClienteDelivery" name="nombreClienteDelivery" class="w-full p-3 border rounded-lg"></div>
+                            <div id="divComercioSelect" class="hidden"><label class="block text-sm font-medium">Comercio:</label><select id="clienteComercio" name="clienteComercio" class="w-full p-3 border rounded-lg"></select></div>
+                            <div><label class="block text-sm font-medium" id="lblFactura">Referencia/Factura:</label><input type="text" id="numeroFactura" name="numeroFactura" class="w-full p-3 border rounded-lg"></div>
                         </div>
 
                         <div class="flex items-center pt-2" id="divMuestra">
-                            <input type="checkbox" id="esMuestra" name="esMuestra" class="h-5 w-5 text-sky-600 border-slate-300 rounded focus:ring-sky-500">
-                            <label for="esMuestra" class="ml-2 block text-sm font-medium text-slate-700">Registrar como Muestra (sin venta)</label>
+                            <input type="checkbox" id="esMuestra" name="esMuestra" class="h-5 w-5"><label for="esMuestra" class="ml-2 text-sm">¿Es Muestra?</label>
                         </div>
 
-                        <!-- Extras -->
-                        <div id="containerExtrasVenta">
-                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
-                                <div class="flex items-center mb-2"><input type="checkbox" id="pagoConPOS" name="pagoConPOS" class="h-5 w-5 text-sky-600 rounded"><label for="pagoConPOS" class="ml-2 block text-sm font-medium text-slate-700">Venta con POS</label></div>
-                                <div id="posFields" class="hidden ml-7 mt-2"><label class="block text-sm font-medium text-slate-700 mb-1">% Comisión POS:</label><input type="number" id="comisionPOS" name="comisionPOS" step="0.01" min="0" max="100" class="w-32 p-2 border border-slate-300 rounded-md text-sm" placeholder="Ej: 3"></div>
+                        <div id="containerExtrasVenta" class="space-y-4">
+                            <div class="bg-slate-50 p-4 rounded-lg border">
+                                <label class="flex items-center"><input type="checkbox" id="pagoConPOS" name="pagoConPOS"><span class="ml-2 text-sm">Pago POS</span></label>
+                                <div id="posFields" class="hidden mt-2"><label class="text-xs">% Comisión:</label><input type="number" id="comisionPOS" name="comisionPOS" class="w-20 p-2 border ml-2"></div>
                             </div>
-                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                                <div class="flex items-center mb-2"><input type="checkbox" id="incluyeDelivery" name="incluyeDelivery" class="h-5 w-5 text-sky-600 rounded"><label for="incluyeDelivery" class="ml-2 block text-sm font-medium text-slate-700">Incluir Delivery</label></div>
-                                <div id="deliveryFields" class="hidden ml-7 mt-2"><label class="block text-sm font-medium text-slate-700 mb-1">Monto Delivery ($):</label><input type="number" id="montoDelivery" name="montoDelivery" step="0.01" min="0" class="w-32 p-2 border border-slate-300 rounded-md text-sm" placeholder="0.00"></div>
+                            <div class="bg-slate-50 p-4 rounded-lg border">
+                                <label class="flex items-center"><input type="checkbox" id="incluyeDelivery" name="incluyeDelivery"><span class="ml-2 text-sm">Delivery</span></label>
+                                <div id="deliveryFields" class="hidden mt-2"><label class="text-xs">Monto $:</label><input type="number" id="montoDelivery" name="montoDelivery" class="w-24 p-2 border ml-2"></div>
                             </div>
                         </div>
 
-                        <div id="productLines" class="space-y-4 border-t border-b border-slate-200 py-4"></div>
-                        <div class="flex justify-between items-center" id="divAddProduct"><button type="button" id="addProductBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg shadow-sm">+ Añadir Producto</button><div class="text-right"><p class="text-slate-600">Total:</p><p id="saleTotal" class="text-2xl font-bold text-slate-800">$0.00</p></div></div>
-                        <div><label class="block text-sm font-medium text-slate-700 mb-1">Descripción:</label><textarea id="descripcionVenta" name="descripcionVenta" rows="2" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500"></textarea></div>
+                        <div id="productLines" class="space-y-4 border-t border-b py-4"></div>
+                        <div class="flex justify-between items-center"><button type="button" id="addProductBtn" class="bg-slate-200 p-2 rounded-lg">+ Producto</button><div class="text-right font-bold text-xl" id="saleTotal">$0.00</div></div>
                     </div>
 
-                    <!-- 3. Gestionar Consigna (CORREGIDO LOS NOMBRES DE VARIABLES) -->
                     <div id="formGestionConsigna" class="hidden space-y-6">
-                        <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-semibold text-slate-700">Consignaciones Activas</h3><button type="button" id="refreshConsignasBtn" class="text-sm text-sky-600 hover:text-sky-800 font-bold">Actualizar Lista ↻</button></div>
-                        <div><select id="consignaSelect" name="idConsigna" class="w-full p-3 border border-slate-300 rounded-lg"><option value="" disabled selected>Cargando...</option></select></div>
-                        <div id="consignaDetails" class="hidden p-4 bg-yellow-50 rounded-lg border border-yellow-200"><p class="text-sm text-yellow-800"><strong>Producto:</strong> <span id="consProd"></span></p><p class="text-sm text-yellow-800"><strong>Pendiente:</strong> <span id="consQty"></span> unidades</p></div>
-                        
+                        <select id="consignaSelect" name="idConsigna" class="w-full p-3 border rounded-lg"><option value="">Cargando consignas...</option></select>
+                        <div id="consignaDetails" class="hidden p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <p class="text-xs"><strong>Pendiente:</strong> <span id="consQty"></span> <span id="consProd"></span></p>
+                        </div>
                         <div class="grid grid-cols-2 gap-4">
-                            <div><label class="block text-sm font-medium text-slate-700 mb-1">Facturar (Vendidas):</label><input type="number" id="cantVentaConsigna" name="cantVentaConsigna" min="0" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0"></div>
-                            <div><label class="block text-sm font-medium text-slate-700 mb-1">Devolver (Retorno):</label><input type="number" id="cantDevolucionConsigna" name="cantDevolucionConsigna" min="0" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0"></div>
+                            <div><label class="text-xs">Vendido (Facturar):</label><input type="number" id="cantVentaConsigna" name="cantVentaConsigna" class="w-full p-3 border rounded-lg" value="0"></div>
+                            <div><label class="text-xs">Devuelto (Bodega):</label><input type="number" id="cantDevolucionConsigna" name="cantDevolucionConsigna" class="w-full p-3 border rounded-lg" value="0"></div>
                         </div>
-                        
-                        <div id="consignaPrecioFields" class="hidden bg-slate-50 p-4 rounded-lg border border-slate-200">
-                             <div class="grid grid-cols-2 gap-4 mb-3">
-                                <div><label class="block text-sm font-medium text-slate-700 mb-1">Precio Unit.:</label><input type="number" id="precioUnitarioConsigna" name="precioUnitarioConsigna" step="0.01" min="0" class="w-full p-2 border border-slate-300 rounded-md"></div>
-                                <div class="flex items-center pt-6"><input type="checkbox" id="ivaConsigna" name="ivaConsignaCheck" checked class="h-4 w-4 text-sky-600 rounded"><label for="ivaConsigna" class="ml-2 text-sm text-slate-700">Incluye IVA</label></div>
-                             </div>
-                             <div class="flex items-center mb-2"><input type="checkbox" id="posConsigna" name="posConsignaCheck" class="h-4 w-4 text-sky-600 rounded"><label for="posConsigna" class="ml-2 text-sm text-slate-700">Pago con POS</label></div>
-                             <div id="posFieldsConsigna" class="hidden ml-6"><label class="text-sm font-medium text-slate-700">% Comisión:</label><input type="number" id="comisionPOSConsigna" name="comisionPOSConsigna" class="w-20 p-1 border border-slate-300 rounded text-sm ml-2"></div>
+                        <div id="consignaPrecioFields" class="hidden bg-slate-50 p-4 border rounded-lg space-y-3">
+                            <div class="flex gap-4">
+                                <input type="number" id="precioUnitarioConsigna" name="precioUnitarioConsigna" step="0.01" class="w-1/2 p-2 border" placeholder="Precio Unit.">
+                                <label class="flex items-center"><input type="checkbox" id="ivaConsigna" name="ivaConsignaCheck" checked><span class="ml-1 text-xs">IVA</span></label>
+                            </div>
+                            <label class="flex items-center"><input type="checkbox" id="posConsigna" name="posConsignaCheck"><span class="ml-1 text-xs">POS</span></label>
+                            <div id="posFieldsConsigna" class="hidden"><input type="number" id="comisionPOSConsigna" name="comisionPOSConsigna" class="w-16 p-1 border text-xs" placeholder="%"></div>
                         </div>
-                        <div><label class="block text-sm font-medium text-slate-700 mb-1">Nota (Opcional):</label><input type="text" id="descConsigna" name="descConsigna" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Detalle adicional"></div>
                     </div>
                 </div>
-                <div class="flex items-center justify-end pt-6"><button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md">Procesar</button></div>
+                <button type="submit" class="w-full mt-6 bg-sky-600 text-white p-3 rounded-lg font-bold">Procesar Movimiento</button>
             </form>
         </div>
-        
-        <!-- PESTAÑA GASTOS -->
+
         <div id="expenseContent" class="hidden">
-             <form id="expenseForm" class="space-y-6">
-                <input type="hidden" name="formType" value="expense">
-                <div><label class="block text-sm font-medium text-slate-700">Tipo de Gasto:</label><select name="tipoGasto" class="w-full p-3 border border-slate-300 rounded-lg"><option>Transporte</option><option>Material de Empaque</option><option>Insumos</option><option>Publicidad</option><option>Servicios</option><option>Salarios</option><option>Otros</option></select></div>
-                <div class="grid grid-cols-3 gap-4 items-end"><div class="col-span-2"><label class="block text-sm font-medium text-slate-700">Valor:</label><input type="number" name="valorGasto" step="0.01" class="w-full p-3 border border-slate-300 rounded-lg"></div><div class="col-span-1 flex items-center pb-3"><input type="checkbox" name="gastoIncluyeIVA" checked class="h-4 w-4 text-sky-600 rounded"><label class="ml-2 text-sm text-slate-700">IVA Inc.</label></div></div>
-                <div><label class="block text-sm font-medium text-slate-700">Pago:</label><div class="flex space-x-4"><label><input type="radio" name="metodoPago" value="Efectivo" checked> Efectivo</label><label><input type="radio" name="metodoPago" value="Tarjeta"> Tarjeta</label></div></div>
-                <div><label class="block text-sm font-medium text-slate-700">Descripción:</label><textarea name="descripcionGasto" class="w-full p-3 border border-slate-300 rounded-lg"></textarea></div>
-                <div class="flex justify-end pt-4"><button type="submit" class="bg-sky-600 text-white py-3 px-6 rounded-lg font-semibold">Registrar</button></div>
+             <form id="expenseForm" class="space-y-4">
+                <input type="hidden" name="formType" value="expense"><select name="tipoGasto" class="w-full p-3 border rounded-lg"><option>Transporte</option><option>Material de Empaque</option><option>Insumos</option><option>Publicidad</option><option>Otros</option></select>
+                <input type="number" name="valorGasto" placeholder="Valor $" step="0.01" class="w-full p-3 border rounded-lg">
+                <label class="flex items-center"><input type="checkbox" name="gastoIncluyeIVA" checked><span class="ml-2 text-sm">IVA Incluido</span></label>
+                <div class="flex gap-4"><label><input type="radio" name="metodoPago" value="Efectivo" checked> Efectivo</label><label><input type="radio" name="metodoPago" value="Tarjeta"> Tarjeta</label></div>
+                <textarea name="descripcionGasto" placeholder="Descripción" class="w-full p-3 border rounded-lg"></textarea>
+                <button type="submit" class="w-full bg-sky-600 text-white p-3 rounded-lg">Registrar Gasto</button>
             </form>
         </div>
 
-        <!-- PESTAÑA COMERCIOS (SIMPLIFICADA) -->
         <div id="clientsContent" class="hidden">
-             <form id="clientForm" class="space-y-6">
-                <input type="hidden" name="formType" value="client">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Nombre del Comercio:</label>
-                    <input type="text" name="nombreComercio" required class="w-full p-3 border border-slate-300 rounded-lg" placeholder="Ej: Tienda XYZ">
-                </div>
-                <div class="flex justify-end pt-4"><button type="submit" class="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-semibold">Guardar Comercio</button></div>
+             <form id="clientForm" class="space-y-4">
+                <input type="hidden" name="formType" value="client"><input type="text" name="nombreComercio" required placeholder="Nombre Comercio" class="w-full p-3 border rounded-lg">
+                <button type="submit" class="w-full bg-green-600 text-white p-3 rounded-lg">Guardar</button>
             </form>
         </div>
 
-        <!-- PESTAÑA ETIQUETAS -->
         <div id="labelsContent" class="hidden">
-             <p class="text-slate-600 mb-6">Completa los datos para la etiqueta.</p>
-            <form id="label-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <div><label class="block text-sm font-medium text-slate-700">Nombre</label><input type="text" id="labelName" required class="w-full px-3 py-2 border border-slate-300 rounded-md"></div>
-                <div><label class="block text-sm font-medium text-slate-700">Teléfono</label><input type="tel" id="labelPhone" required class="w-full px-3 py-2 border border-slate-300 rounded-md"></div>
-                <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700">Dirección</label><textarea id="labelAddress" rows="3" required class="w-full px-3 py-2 border border-slate-300 rounded-md"></textarea></div>
-                <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700">Productos</label><div id="label-products-list" class="space-y-3"></div><button type="button" id="add-label-product-btn" class="mt-2 text-sm text-sky-600">+ Producto</button></div>
-                <div><label class="block text-sm font-medium text-slate-700">Total</label><input type="number" id="labelPrice" step="0.01" required class="w-full px-3 py-2 border border-slate-300 rounded-md"></div>
-                <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700">Pago</label><select id="label-payment-method" class="w-full px-3 py-2 border border-slate-300 rounded-md"><option>Efectivo</option><option>Transferencia</option></select></div>
-                <div class="md:col-span-2"><button type="submit" class="w-full mt-4 bg-sky-600 text-white font-semibold py-3 px-4 rounded-md">Agregar Etiqueta</button></div>
+            <form id="label-form" class="space-y-4">
+                 <input type="text" id="labelName" placeholder="Nombre" required class="w-full p-2 border rounded">
+                 <input type="tel" id="labelPhone" placeholder="Teléfono" required class="w-full p-2 border rounded">
+                 <textarea id="labelAddress" placeholder="Dirección" class="w-full p-2 border rounded"></textarea>
+                 <div id="label-products-list" class="space-y-2"></div>
+                 <button type="button" id="add-label-product-btn" class="text-sky-600 text-xs">+ Producto</button>
+                 <input type="number" id="labelPrice" step="0.01" placeholder="Total $" class="w-full p-2 border rounded">
+                 <button type="submit" class="w-full bg-sky-600 text-white p-2 rounded">Añadir Etiqueta</button>
             </form>
         </div>
 
         <div class="flex items-center justify-end space-x-3 mt-6">
             <div id="loader" class="loader"></div>
-            <div id="message" class="flex-grow p-4 rounded-lg text-center text-sm" role="alert"></div>
+            <div id="message" class="text-sm p-2 rounded-lg hidden"></div>
         </div>
     </div>
 
-    <!-- Contenedor Impresión -->
-    <div class="non-printable max-w-3xl mx-auto mt-8"><div id="action-buttons" class="hidden flex-col sm:flex-row gap-4 mb-8"><button id="print-btn" class="w-full sm:w-auto flex-1 bg-green-600 text-white font-semibold py-3 px-6 rounded-md hover:bg-green-700">Imprimir Todas</button><button id="clear-btn" class="w-full sm:w-auto flex-1 bg-red-600 text-white font-semibold py-3 px-6 rounded-md hover:bg-red-700">Limpiar Cola</button></div></div>
+    <div id="action-buttons" class="hidden max-w-4xl mx-auto mt-4 flex gap-4 non-printable">
+        <button id="print-btn" class="flex-1 bg-green-600 text-white p-3 rounded-lg">Imprimir</button>
+        <button id="clear-btn" class="flex-1 bg-red-600 text-white p-3 rounded-lg">Limpiar</button>
+    </div>
     <div id="print-area"><div id="labels-container"></div></div>
 
     <template id="productOptionsTemplate">
-        <option value="" disabled selected>Selecciona un producto...</option>
-        <option value="Miel Picante Baja botella 350 g">Miel Picante Baja botella 350 g</option>
-        <option value="Miel Picante Media botella 350 g">Miel Picante Media botella 350 g</option>
-        <option value="Miel Picante Alta botella 350 g">Miel Picante Alta botella 350 g</option>
+        <option value="" disabled selected>Selecciona producto...</option>
+        <option value="Miel Picante Baja botella 350 g">Miel Picante Baja 350g</option>
+        <option value="Miel Picante Media botella 350 g">Miel Picante Media 350g</option>
+        <option value="Miel Picante Alta botella 350 g">Miel Picante Alta 350g</option>
         <option value="Miel Picante Baja sachet">Miel Picante Baja sachet</option>
         <option value="Miel Picante Media sachet">Miel Picante Media sachet</option>
         <option value="Miel Picante Alta sachet">Miel Picante Alta sachet</option>
-        <option value="Miel Picante Baja galón">Miel Picante Baja galón</option>
-        <option value="Miel Picante Media galón">Miel Picante Media galón</option>
-        <option value="Miel Picante Alta galón">Miel Picante Alta galón</option>
     </template>
 
     <script>
         const FULL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMapJvU3t9B7c0sfZIQRJbjPZpqjVVQCF9gsJrQd4evSVDCeNnPKlRfdkPLoxkZE8JyA/exec';
-        const productOptionsTemplate = document.getElementById('productOptionsTemplate');
         
-        // Tabs
-        const tabInventoryBtn = document.getElementById('tabInventoryBtn');
-        const tabExpenseBtn = document.getElementById('tabExpenseBtn');
-        const tabClientsBtn = document.getElementById('tabClientsBtn');
-        const tabLabelsBtn = document.getElementById('tabLabelsBtn');
-        
-        const inventoryContent = document.getElementById('inventoryContent');
-        const expenseContent = document.getElementById('expenseContent');
-        const clientsContent = document.getElementById('clientsContent');
-        const labelsContent = document.getElementById('labelsContent');
-        const actionButtons = document.getElementById('action-buttons');
-        
-        // Forms
-        const inventoryForm = document.getElementById('inventoryForm');
-        const expenseForm = document.getElementById('expenseForm');
-        const clientForm = document.getElementById('clientForm');
-        const labelForm = document.getElementById('label-form');
-
-        // Inventory Elements
-        const radiosMovement = document.getElementsByName('mainMovementType');
-        const radiosDestino = document.getElementsByName('ventaDestino');
-        const formIngreso = document.getElementById('formIngreso');
-        const formVenta = document.getElementById('formVenta');
-        const formGestionConsigna = document.getElementById('formGestionConsigna');
-        const productLinesContainer = document.getElementById('productLines');
-        const addProductBtn = document.getElementById('addProductBtn');
-        const saleTotalEl = document.getElementById('saleTotal');
-        const pagoConPOSCheckbox = document.getElementById('pagoConPOS');
-        const posFields = document.getElementById('posFields');
-        const incluyeDeliveryCheckbox = document.getElementById('incluyeDelivery');
-        const deliveryFields = document.getElementById('deliveryFields');
-        const divNombreCliente = document.getElementById('divNombreCliente');
-        const divComercioSelect = document.getElementById('divComercioSelect');
-        const clienteComercioSelect = document.getElementById('clienteComercio');
-        const btnRefreshClients = document.getElementById('btnRefreshClients');
-        const lblFactura = document.getElementById('lblFactura');
-
-        // Gestion Consigna UI
-        const consignaSelect = document.getElementById('consignaSelect');
-        const refreshConsignasBtn = document.getElementById('refreshConsignasBtn');
-        const consignaDetails = document.getElementById('consignaDetails');
-        const consProdSpan = document.getElementById('consProd');
-        const consQtySpan = document.getElementById('consQty');
-        const cantVentaConsigna = document.getElementById('cantVentaConsigna');
-        const consignaPrecioFields = document.getElementById('consignaPrecioFields');
-        const posConsigna = document.getElementById('posConsigna');
-        const posFieldsConsigna = document.getElementById('posFieldsConsigna');
-
-        // Elementos Etiquetas
-        const labelsContainer = document.getElementById('labels-container');
-        const printBtn = document.getElementById('print-btn');
-        const clearBtn = document.getElementById('clear-btn');
-        const addLabelProductBtn = document.getElementById('add-label-product-btn');
-        const labelProductsList = document.getElementById('label-products-list');
-
-        // Common
-        const loader = document.getElementById('loader');
-        const messageDiv = document.getElementById('message');
-
-        // --- TABS ---
-        function switchTab(activeTab) {
-            const tabs = { inventory: tabInventoryBtn, expense: tabExpenseBtn, clients: tabClientsBtn, labels: tabLabelsBtn };
-            const contents = { inventory: inventoryContent, expense: expenseContent, clients: clientsContent, labels: labelsContent };
-            Object.keys(tabs).forEach(key => {
-                const isActive = key === activeTab;
-                tabs[key].classList.toggle('active', isActive);
-                tabs[key].classList.toggle('text-slate-500', !isActive);
-                contents[key].classList.toggle('hidden', !isActive);
+        function switchTab(tab) {
+            ['inventory', 'expense', 'clients', 'labels'].forEach(t => {
+                document.getElementById(t + 'Content').classList.add('hidden');
+                document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1) + 'Btn').classList.remove('active');
             });
-            messageDiv.textContent = ''; messageDiv.className = 'flex-grow p-4 rounded-lg text-center text-sm';
-            actionButtons.classList.toggle('hidden', activeTab !== 'labels');
+            document.getElementById(tab + 'Content').classList.remove('hidden');
+            document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1) + 'Btn').classList.add('active');
+            document.getElementById('action-buttons').classList.toggle('hidden', tab !== 'labels');
         }
-        tabInventoryBtn.addEventListener('click', () => switchTab('inventory'));
-        tabExpenseBtn.addEventListener('click', () => switchTab('expense'));
-        tabClientsBtn.addEventListener('click', () => switchTab('clients'));
-        tabLabelsBtn.addEventListener('click', () => switchTab('labels'));
 
-        // --- INVENTORY LOGIC ---
-        function toggleInventoryForms() {
-            const movType = document.querySelector('input[name="mainMovementType"]:checked').value;
-            formIngreso.classList.toggle('hidden', movType !== 'Ingreso');
-            formVenta.classList.toggle('hidden', !['Venta', 'ConsignacionSalida'].includes(movType));
-            if(formGestionConsigna) formGestionConsigna.classList.toggle('hidden', movType !== 'GestionarConsigna');
+        ['Inventory', 'Expense', 'Clients', 'Labels'].forEach(t => document.getElementById('tab' + t + 'Btn').addEventListener('click', () => switchTab(t.toLowerCase())));
 
-            if (['Venta', 'ConsignacionSalida'].includes(movType)) {
-                if (productLinesContainer.children.length === 0) addProductLine();
-                const isConsignaSalida = movType === 'ConsignacionSalida';
-                
-                document.getElementById('containerExtrasVenta').classList.toggle('hidden', isConsignaSalida);
-                document.getElementById('divMuestra').classList.toggle('hidden', isConsignaSalida);
-                
-                lblFactura.textContent = isConsignaSalida ? "Cliente / Empresa:" : "Número de Factura:";
-                document.getElementById('numeroFactura').placeholder = isConsignaSalida ? "Nombre del Cliente o Empresa" : "Ej: 001-001";
-                
-                // Ocultar precio en líneas si es Consignación Salida
-                document.querySelectorAll('.price-field').forEach(el => el.classList.toggle('invisible', isConsignaSalida));
+        const movementRadios = document.getElementsByName('mainMovementType');
+        movementRadios.forEach(r => r.addEventListener('change', () => {
+            const val = document.querySelector('input[name="mainMovementType"]:checked').value;
+            document.getElementById('formIngreso').classList.toggle('hidden', val !== 'Ingreso');
+            document.getElementById('formVenta').classList.toggle('hidden', val !== 'Venta' && val !== 'ConsignacionSalida');
+            document.getElementById('formGestionConsigna').classList.toggle('hidden', val !== 'GestionarConsigna');
+            document.getElementById('lblFactura').textContent = val === 'ConsignacionSalida' ? "Empresa/Comercio:" : "Referencia:";
+            if (val === 'GestionarConsigna') loadConsignments();
+            if (val === 'Venta' || val === 'ConsignacionSalida') {
+                if (document.getElementById('productLines').children.length === 0) addProductLine();
             }
-            if (movType === 'GestionarConsigna') {
-                loadConsignments();
-            }
+        }));
+
+        async function fetchStock(prod, el) {
+            if (!prod) return;
+            el.textContent = '...';
+            const res = await fetch(`${FULL_SCRIPT_URL}?action=getStock&producto=${encodeURIComponent(prod)}`);
+            const json = await res.json();
+            el.textContent = json.success ? `Stock: ${json.stock}` : 'Stock: 0';
         }
-        
-        function toggleDestinoVenta() {
-            const destino = document.querySelector('input[name="ventaDestino"]:checked').value;
-            divNombreCliente.classList.toggle('hidden', destino !== 'Delivery');
-            divComercioSelect.classList.toggle('hidden', destino !== 'Comercio');
-            if (destino === 'Comercio' && clienteComercioSelect.options.length <= 1) {
-                loadClients();
-            }
-        }
-
-        async function loadClients() {
-            clienteComercioSelect.innerHTML = '<option>Cargando...</option>';
-            try {
-                const res = await fetch(`${FULL_SCRIPT_URL}?action=getClients`);
-                const json = await res.json();
-                if (json.success && json.clients.length > 0) {
-                    clienteComercioSelect.innerHTML = '<option value="" disabled selected>Seleccione un comercio...</option>';
-                    json.clients.forEach(c => {
-                        const opt = document.createElement('option');
-                        opt.value = c; opt.textContent = c;
-                        clienteComercioSelect.appendChild(opt);
-                    });
-                } else {
-                    clienteComercioSelect.innerHTML = '<option disabled>No hay comercios</option>';
-                }
-            } catch (e) { clienteComercioSelect.innerHTML = '<option>Error</option>'; }
-        }
-
-        radiosMovement.forEach(r => r.addEventListener('change', toggleInventoryForms));
-        radiosDestino.forEach(r => r.addEventListener('change', toggleDestinoVenta));
-        btnRefreshClients.addEventListener('click', loadClients);
-        pagoConPOSCheckbox.addEventListener('change', () => posFields.classList.toggle('hidden', !pagoConPOSCheckbox.checked));
-        incluyeDeliveryCheckbox.addEventListener('change', () => deliveryFields.classList.toggle('hidden', !incluyeDeliveryCheckbox.checked));
-
-        // --- GESTIÓN CONSIGNA LOGIC ---
-        async function loadConsignments() {
-            consignaSelect.innerHTML = '<option>Cargando...</option>';
-            try {
-                const response = await fetch(`${FULL_SCRIPT_URL}?action=getConsignments`);
-                const result = await response.json();
-                if (result.success && result.consignments.length > 0) {
-                    consignaSelect.innerHTML = '<option value="" disabled selected>Selecciona una consigna...</option>';
-                    result.consignments.forEach(c => {
-                        const option = document.createElement('option');
-                        option.value = JSON.stringify(c);
-                        option.textContent = `${c.fecha} - ${c.cliente} - ${c.producto} (${c.cantidad})`;
-                        consignaSelect.appendChild(option);
-                    });
-                } else {
-                    consignaSelect.innerHTML = '<option disabled>No hay consignaciones pendientes</option>';
-                }
-            } catch (e) { consignaSelect.innerHTML = '<option disabled>Error al cargar</option>'; }
-        }
-        refreshConsignasBtn.addEventListener('click', loadConsignments);
-        
-        consignaSelect.addEventListener('change', () => {
-            const data = JSON.parse(consignaSelect.value);
-            consignaDetails.classList.remove('hidden');
-            consProdSpan.textContent = data.producto;
-            consQtySpan.textContent = data.cantidad;
-        });
-
-        cantVentaConsigna.addEventListener('input', () => {
-            const val = parseFloat(cantVentaConsigna.value) || 0;
-            consignaPrecioFields.classList.toggle('hidden', val <= 0);
-        });
-
-        posConsigna.addEventListener('change', () => posFieldsConsigna.classList.toggle('hidden', !posConsigna.checked));
 
         function addProductLine() {
             const div = document.createElement('div');
-            div.className = 'product-line grid grid-cols-12 gap-x-2 gap-y-3 items-start border-t pt-3';
-            const isConsignaSalida = document.querySelector('input[name="mainMovementType"]:checked').value === 'ConsignacionSalida';
-            const hideClass = isConsignaSalida ? 'invisible' : '';
-
-            div.innerHTML = `<div class="col-span-12 sm:col-span-4"><select name="producto" class="w-full p-2 border border-slate-300 rounded-md shadow-sm">${productOptionsTemplate.innerHTML}</select><div class="stock-display text-right text-xs text-slate-500 font-semibold h-4 mt-1 pr-1"></div></div><div class="col-span-4 sm:col-span-2"><input type="number" name="cantidad" min="1" placeholder="Cant." class="w-full p-2 border border-slate-300 rounded-md shadow-sm"></div><div class="col-span-8 sm:col-span-2 price-field ${hideClass}"><input type="number" name="precioUnitario" step="0.01" min="0" placeholder="P. Unit." class="w-full p-2 border border-slate-300 rounded-md shadow-sm"></div><div class="col-span-8 sm:col-span-3 price-field ${hideClass}"><input type="text" name="subtotal" readonly class="w-full p-2 bg-slate-100 border-slate-300 rounded-md text-right font-medium" value="$0.00"></div><div class="col-span-4 sm:col-span-1 flex items-center justify-end space-x-2"><div class="price-field ${hideClass} flex flex-col items-center mr-2"><input type="checkbox" name="incluyeIVA" checked class="h-4 w-4 text-sky-600 rounded"><label class="text-[10px]">IVA</label></div><button type="button" class="remove-product-btn text-red-500 font-bold p-1 leading-none h-6 w-6">✕</button></div>`;
-            productLinesContainer.appendChild(div);
+            div.className = 'product-line grid grid-cols-12 gap-2 border-b pb-2 items-center';
+            div.innerHTML = `<div class="col-span-12 sm:col-span-5"><select name="producto" class="w-full p-2 border rounded">${document.getElementById('productOptionsTemplate').innerHTML}</select><div class="stock-info text-[10px] text-slate-400"></div></div><div class="col-span-4 sm:col-span-2"><input type="number" name="cantidad" placeholder="Cant" class="w-full p-2 border rounded"></div><div class="col-span-4 sm:col-span-3 price-field"><input type="number" name="precioUnitario" placeholder="Price" step="0.01" class="w-full p-2 border rounded"></div><div class="col-span-4 sm:col-span-2 flex items-center"><input type="checkbox" name="incluyeIVA" checked class="mr-1"><button type="button" class="remove-product-btn text-red-500 ml-2">×</button></div>`;
+            document.getElementById('productLines').appendChild(div);
+            div.querySelector('select').addEventListener('change', e => fetchStock(e.target.value, div.querySelector('.stock-info')));
+            div.querySelector('.remove-product-btn').addEventListener('click', () => { div.remove(); updateSaleTotal(); });
+            div.addEventListener('input', updateSaleTotal);
         }
-        
-        addProductBtn.addEventListener('click', addProductLine);
-        productLinesContainer.addEventListener('click', e => { if(e.target.classList.contains('remove-product-btn')) { e.target.closest('.product-line').remove(); updateSaleTotal(); } });
-        productLinesContainer.addEventListener('input', e => { if(['cantidad','precioUnitario'].includes(e.target.name)) updateLineAndTotal(e.target.closest('.product-line')); });
-        productLinesContainer.addEventListener('change', e => { if(e.target.name==='producto') fetchStock(e.target.value, e.target.parentElement.querySelector('.stock-display')); });
-        document.getElementById('productoIngreso').addEventListener('change', e => fetchStock(e.target.value, document.getElementById('stockIngreso')));
 
-        function updateLineAndTotal(line) {
-            const qty = parseFloat(line.querySelector('input[name="cantidad"]').value)||0;
-            const price = parseFloat(line.querySelector('input[name="precioUnitario"]').value)||0;
-            line.querySelector('input[name="subtotal"]').value = `$${(qty*price).toFixed(2)}`;
-            updateSaleTotal();
-        }
         function updateSaleTotal() {
             let total = 0;
             document.querySelectorAll('.product-line').forEach(l => {
-                total += (parseFloat(l.querySelector('input[name="cantidad"]').value)||0) * (parseFloat(l.querySelector('input[name="precioUnitario"]').value)||0);
+                const q = parseFloat(l.querySelector('[name="cantidad"]').value) || 0;
+                const p = parseFloat(l.querySelector('[name="precioUnitario"]').value) || 0;
+                total += q * p;
             });
-            saleTotalEl.textContent = `$${total.toFixed(2)}`;
-        }
-        async function fetchStock(name, el) {
-            if(!name) { el.textContent=''; return; }
-            el.textContent='...';
-            try {
-                const res = await fetch(`${FULL_SCRIPT_URL}?action=getStock&producto=${encodeURIComponent(name)}`);
-                const json = await res.json();
-                el.textContent = json.success ? `Stock: ${json.stock}` : 'Stock: 0';
-            } catch(e) { el.textContent='Err'; }
+            document.getElementById('saleTotal').textContent = `$${total.toFixed(2)}`;
         }
 
-        // --- SUBMIT MAIN ---
-        async function handleFormSubmit(e) {
-            e.preventDefault();
-            if (e.target.id === 'label-form') return;
-            loader.style.display = 'block'; messageDiv.textContent = '';
-            
-            const formData = new FormData(e.target);
-            let data = { formType: e.target.id.replace('Form', '') }; 
-            
-            if (data.formType === 'inventory') {
-                data.tipoMovimiento = formData.get('mainMovementType');
-                if (data.tipoMovimiento === 'GestionarConsigna') {
-                    // Datos gestión consigna aislados con nombres únicos
-                    const selectedOption = consignaSelect.options[consignaSelect.selectedIndex];
-                    if(!selectedOption || !selectedOption.value) { showMessage('Seleccione una consigna pendiente', 'error'); loader.style.display='none'; return; }
-                    const consData = JSON.parse(selectedOption.value);
-                    data.idConsigna = consData.id;
-                    data.cantidadVenta = formData.get('cantVentaConsigna');
-                    data.cantidadDevolucion = formData.get('cantDevolucionConsigna');
-                    data.precioUnitario = formData.get('precioUnitarioConsigna');
-                    data.incluyeIVA = formData.get('ivaConsignaCheck') === 'on';
-                    data.pagoConPOS = formData.get('posConsignaCheck') === 'on';
-                    data.comisionPOS = formData.get('comisionPOSConsigna');
-                    data.descripcionVenta = formData.get('descConsigna');
-                }
-                else if (data.tipoMovimiento !== 'Ingreso') {
-                    // Venta o ConsignaSalida
-                    const lines = Array.from(document.querySelectorAll('.product-line')).map(l => ({
-                        producto: l.querySelector('select[name="producto"]').value,
-                        cantidad: l.querySelector('input[name="cantidad"]').value,
-                        precioUnitario: l.querySelector('input[name="precioUnitario"]').value,
-                        incluyeIVA: l.querySelector('input[name="incluyeIVA"]').checked
-                    }));
-                    if(lines.some(l => !l.producto || !l.cantidad)) { showMessage('Complete productos', 'error'); loader.style.display='none'; return; }
-                    
-                    data.productos = lines;
-                    data.numeroFactura = formData.get('numeroFactura');
-                    data.descripcionVenta = formData.get('descripcionVenta');
-                    
-                    if (data.tipoMovimiento === 'Venta') {
-                        const destino = formData.get('ventaDestino');
-                        data.tipoVenta = destino; 
-                        data.nombreCliente = (destino === 'Delivery') ? formData.get('nombreClienteDelivery') : formData.get('clienteComercio');
-                        if (!data.nombreCliente) { showMessage('Ingrese nombre del cliente', 'error'); loader.style.display='none'; return; }
-                        data.esMuestra = formData.get('esMuestra') === 'on';
-                        data.pagoConPOS = formData.get('pagoConPOS') === 'on';
-                        data.comisionPOS = formData.get('comisionPOS');
-                        data.incluyeDelivery = formData.get('incluyeDelivery') === 'on';
-                        data.montoDelivery = formData.get('montoDelivery');
-                    } else {
-                         data.nombreCliente = formData.get('numeroFactura'); // En Salida, el campo factura funciona como nombre 
-                    }
-                } else if (data.tipoMovimiento === 'Ingreso') {
-                    data.producto = formData.get('producto');
-                    data.cantidad = formData.get('cantidad');
-                }
-            } else if (data.formType === 'client') {
-                data.nombreComercio = formData.get('nombreComercio');
-            } else {
-                 data = { ...data, ...Object.fromEntries(formData.entries()), gastoIncluyeIVA: formData.get('gastoIncluyeIVA')==='on' };
-            }
+        document.getElementById('addProductBtn').addEventListener('click', addProductLine);
 
-            try {
-                const res = await fetch(FULL_SCRIPT_URL, { method: 'POST', mode: 'cors', body: JSON.stringify(data) });
-                const json = await res.json();
-                if (json.success) {
-                    showMessage(json.message, 'success');
-                    e.target.reset();
-                    if(data.formType === 'inventory' && (data.tipoMovimiento === 'Venta' || data.tipoMovimiento === 'ConsignacionSalida')) {
-                        productLinesContainer.innerHTML = ''; addProductLine(); updateSaleTotal();
-                        posFields.classList.add('hidden'); deliveryFields.classList.add('hidden');
-                    }
-                    if(data.tipoMovimiento === 'GestionarConsigna') {
-                        consignaDetails.classList.add('hidden');
-                        consignaPrecioFields.classList.add('hidden');
-                        posFieldsConsigna.classList.add('hidden');
-                        loadConsignments();
-                    }
-                } else { showMessage(json.error, 'error'); }
-            } catch(err) { showMessage('Error conexión', 'error'); } 
-            finally { loader.style.display = 'none'; }
+        async function loadConsignments() {
+            const sel = document.getElementById('consignaSelect');
+            sel.innerHTML = '<option>Cargando...</option>';
+            const res = await fetch(`${FULL_SCRIPT_URL}?action=getConsignments`);
+            const json = await res.json();
+            if (json.success && json.consignments.length > 0) {
+                sel.innerHTML = '<option value="" disabled selected>Seleccione consigna...</option>';
+                json.consignments.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = JSON.stringify(c);
+                    opt.textContent = `${c.cliente} | ${c.producto} (${c.cantidad})`;
+                    sel.appendChild(opt);
+                });
+            } else sel.innerHTML = '<option disabled>No hay pendientes</option>';
         }
 
-        // --- Etiquetas ---
-        function addLabelProductLine() {
-             const div = document.createElement('div'); div.className = 'label-product-entry grid grid-cols-12 gap-2 items-center';
-             div.innerHTML = `<div class="col-span-3"><input type="number" name="quantity" value="1" min="1" class="w-full px-3 py-2 border border-slate-300 rounded-md"></div><div class="col-span-8"><select name="product" class="w-full px-3 py-2 border border-slate-300 rounded-md">${productOptionsTemplate.innerHTML}</select></div><div class="col-span-1 text-center"><button type="button" class="remove-label-product-btn text-red-500 font-bold text-xl">&times;</button></div>`;
-             labelProductsList.appendChild(div);
-        }
-        labelProductsList.addEventListener('click', e => { if(e.target.classList.contains('remove-label-product-btn')) e.target.closest('.label-product-entry').remove(); });
-        document.getElementById('add-label-product-btn').addEventListener('click', addLabelProductLine);
-        document.getElementById('print-btn').addEventListener('click', () => window.print());
-        document.getElementById('clear-btn').addEventListener('click', () => labelsContainer.innerHTML = '');
-        labelForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const d = new FormData(labelForm);
-            const label = document.createElement('div'); label.className = 'label';
-            let prods = '<ul class="list-disc list-inside pl-1 text-sm">';
-            document.querySelectorAll('.label-product-entry').forEach(l => prods += `<li>${l.querySelector('input').value} x ${l.querySelector('select').value}</li>`);
-            prods += '</ul>';
-            label.innerHTML = `<p><strong>${d.get('labelName')}</strong></p><p>${d.get('labelPhone')}</p><p>${d.get('labelAddress')}</p><div>${prods}</div><p>Total: $${d.get('labelPrice')}</p><p class="mt-2 pt-2 border-t">${d.get('label-payment-method')}</p>`;
-            labelsContainer.appendChild(label);
-            labelForm.reset(); labelProductsList.innerHTML=''; addLabelProductLine();
+        document.getElementById('consignaSelect').addEventListener('change', e => {
+            const data = JSON.parse(e.target.value);
+            document.getElementById('consignaDetails').classList.remove('hidden');
+            document.getElementById('consProd').textContent = data.producto;
+            document.getElementById('consQty').textContent = data.cantidad;
         });
 
-        function showMessage(msg, type) {
-            messageDiv.textContent = msg;
-            messageDiv.className = `flex-grow p-4 rounded-lg text-center text-sm ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
-        }
+        document.getElementById('cantVentaConsigna').addEventListener('input', e => {
+            document.getElementById('consignaPrecioFields').classList.toggle('hidden', parseFloat(e.target.value) <= 0);
+        });
 
-        // Init
-        document.getElementById('productoIngreso').innerHTML = productOptionsTemplate.innerHTML;
-        toggleInventoryForms();
-        inventoryForm.addEventListener('submit', handleFormSubmit);
-        expenseForm.addEventListener('submit', handleFormSubmit);
-        clientForm.addEventListener('submit', handleFormSubmit);
-        addLabelProductLine();
+        document.getElementById('inventoryForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const loader = document.getElementById('loader');
+            const msg = document.getElementById('message');
+            loader.style.display = 'block'; msg.classList.add('hidden');
+
+            const fd = new FormData(e.target);
+            const mov = fd.get('mainMovementType');
+            let data = { formType: 'inventory', tipoMovimiento: mov };
+
+            if (mov === 'GestionarConsigna') {
+                const c = JSON.parse(fd.get('idConsigna'));
+                data = { ...data, idConsigna: c.id, cantidadVenta: fd.get('cantVentaConsigna'), cantidadDevolucion: fd.get('cantDevolucionConsigna'), precioUnitario: fd.get('precioUnitarioConsigna'), incluyeIVA: fd.get('ivaConsignaCheck') === 'on', pagoConPOS: fd.get('posConsignaCheck') === 'on', comisionPOS: fd.get('comisionPOSConsigna'), descripcionVenta: fd.get('descConsigna') };
+            } else if (mov === 'Ingreso') {
+                data.producto = fd.get('producto'); data.cantidad = fd.get('cantidad');
+            } else {
+                data.productos = Array.from(document.querySelectorAll('.product-line')).map(l => ({ producto: l.querySelector('[name="producto"]').value, cantidad: l.querySelector('[name="cantidad"]').value, precioUnitario: l.querySelector('[name="precioUnitario"]').value, incluyeIVA: l.querySelector('[name="incluyeIVA"]').checked }));
+                data.nombreCliente = fd.get('ventaDestino') === 'Delivery' ? fd.get('nombreClienteDelivery') : fd.get('clienteComercio');
+                data.numeroFactura = fd.get('numeroFactura');
+                data.tipoVenta = fd.get('ventaDestino');
+                data.esMuestra = fd.get('esMuestra') === 'on';
+                data.pagoConPOS = fd.get('pagoConPOS') === 'on';
+                data.comisionPOS = fd.get('comisionPOS');
+                data.incluyeDelivery = fd.get('incluyeDelivery') === 'on';
+                data.montoDelivery = fd.get('montoDelivery');
+            }
+
+            const res = await fetch(FULL_SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
+            const json = await res.json();
+            loader.style.display = 'none';
+            msg.textContent = json.success ? 'Éxito' : 'Error: ' + json.error;
+            msg.className = `text-sm p-2 rounded-lg ${json.success ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+            msg.classList.remove('hidden');
+            if (json.success) {
+                e.target.reset();
+                document.getElementById('productLines').innerHTML = '';
+                document.getElementById('consignaDetails').classList.add('hidden');
+                if (mov === 'GestionarConsigna') loadConsignments();
+            }
+        });
+
+        // Simple forms submit
+        ['expense', 'client'].forEach(f => {
+            document.getElementById(f + 'Form').addEventListener('submit', async e => {
+                e.preventDefault();
+                const loader = document.getElementById('loader');
+                loader.style.display = 'block';
+                const fd = new FormData(e.target);
+                const res = await fetch(FULL_SCRIPT_URL, { method: 'POST', body: JSON.stringify(Object.fromEntries(fd)) });
+                loader.style.display = 'none';
+                e.target.reset();
+            });
+        });
+
+        // Etiqueta Logic
+        document.getElementById('add-label-product-btn').addEventListener('click', () => {
+            const d = document.createElement('div');
+            d.innerHTML = `<input type="number" placeholder="Cant" class="w-12 p-1 border"> <select class="p-1 border">${document.getElementById('productOptionsTemplate').innerHTML}</select>`;
+            document.getElementById('label-products-list').appendChild(d);
+        });
+
+        document.getElementById('label-form').addEventListener('submit', e => {
+            e.preventDefault();
+            const container = document.getElementById('labels-container');
+            const l = document.createElement('div');
+            l.className = 'label';
+            const prods = Array.from(document.getElementById('label-products-list').children).map(c => `${c.querySelector('input').value}x ${c.querySelector('select').value}`).join(', ');
+            l.innerHTML = `<strong>${document.getElementById('labelName').value}</strong><br>${document.getElementById('labelPhone').value}<br>${document.getElementById('labelAddress').value}<br><em>${prods}</em><br>Total: $${document.getElementById('labelPrice').value}`;
+            container.appendChild(l);
+            e.target.reset();
+            document.getElementById('label-products-list').innerHTML = '';
+        });
+
+        document.getElementById('print-btn').addEventListener('click', () => window.print());
+        document.getElementById('clear-btn').addEventListener('click', () => document.getElementById('labels-container').innerHTML = '');
+        
+        document.getElementById('productoIngreso').innerHTML = document.getElementById('productOptionsTemplate').innerHTML;
+        document.getElementById('pagoConPOS').addEventListener('change', e => document.getElementById('posFields').classList.toggle('hidden', !e.target.checked));
+        document.getElementById('incluyeDelivery').addEventListener('change', e => document.getElementById('deliveryFields').classList.toggle('hidden', !e.target.checked));
+        document.getElementById('posConsigna').addEventListener('change', e => document.getElementById('posFieldsConsigna').classList.toggle('hidden', !e.target.checked));
+        document.querySelectorAll('input[name="ventaDestino"]').forEach(r => r.addEventListener('change', () => {
+            const isComercio = document.querySelector('input[name="ventaDestino"]:checked').value === 'Comercio';
+            document.getElementById('divNombreCliente').classList.toggle('hidden', isComercio);
+            document.getElementById('divComercioSelect').classList.toggle('hidden', !isComercio);
+            if (isComercio) loadClients();
+        }));
+        
+        async function loadClients() {
+            const sel = document.getElementById('clienteComercio');
+            sel.innerHTML = '<option>Cargando...</option>';
+            const res = await fetch(`${FULL_SCRIPT_URL}?action=getClients`);
+            const json = await res.json();
+            if (json.success && json.clients.length > 0) {
+                sel.innerHTML = '<option value="" disabled selected>Seleccione...</option>';
+                json.clients.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
+            } else sel.innerHTML = '<option disabled>Sin clientes</option>';
+        }
 
     </script>
 </body>
