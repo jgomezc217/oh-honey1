@@ -136,10 +136,11 @@
                         </div>
                         
                         <div class="bg-slate-50 p-4 rounded-lg border">
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Buscar Registro Pendiente:</label>
                             <select id="consignaSelectorMain" class="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500">
-                                <option value="">Seleccione una consigna para añadir...</option>
+                                <option value="">Seleccione para añadir (ordenado por fecha)...</option>
                             </select>
-                            <p class="text-[10px] text-slate-400 mt-2 italic">Al seleccionar una, se agregará a la lista de abajo para liquidar.</p>
+                            <p class="text-[10px] text-slate-400 mt-2 italic">Consejo: Selecciona primero los registros con fechas más antiguas para mantener el flujo FIFO.</p>
                         </div>
 
                         <div id="listaLiquidacion" class="space-y-4">
@@ -334,11 +335,12 @@
                 const res = await fetch(`${FULL_SCRIPT_URL}?action=getConsignments`);
                 const json = await res.json();
                 if (json.success && json.consignments.length > 0) {
-                    sel.innerHTML = '<option value="" selected>Seleccione una consigna para añadir...</option>';
+                    sel.innerHTML = '<option value="" selected>Seleccione para añadir (ordenado por fecha)...</option>';
                     json.consignments.forEach(c => {
                         const opt = document.createElement('option');
                         opt.value = JSON.stringify(c);
-                        opt.textContent = `${c.cliente} | ${c.producto} (${c.cantidad})`;
+                        // MOSTRAR FECHA EN EL SELECTOR
+                        opt.textContent = `[${c.fecha}] ${c.cliente} | ${c.producto} (${c.cantidad})`;
                         sel.appendChild(opt);
                     });
                 } else {
@@ -354,6 +356,7 @@
             
             itemsALiquidar.push({
                 idConsigna: data.id,
+                fecha: data.fecha,
                 producto: data.producto,
                 cliente: data.cliente,
                 cantidad: data.cantidad,
@@ -380,7 +383,11 @@
                     <button type="button" onclick="removerItemLiq(${index})" class="absolute top-2 right-2 text-red-500 font-bold hover:bg-red-50 rounded px-1">×</button>
                     <div class="pr-6">
                         <p class="text-sm font-bold text-slate-700">${item.producto}</p>
-                        <p class="text-[10px] text-slate-500 uppercase font-semibold">Cliente: ${item.cliente} | Pendiente: ${item.cantidad}</p>
+                        <p class="text-[10px] text-slate-500 uppercase font-bold tracking-tight">
+                            <span class="bg-yellow-100 px-1 py-0.5 rounded text-yellow-800">FECHA: ${item.fecha}</span> 
+                            | CLIENTE: ${item.cliente} 
+                            | PENDIENTE: ${item.cantidad}
+                        </p>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
