@@ -66,7 +66,7 @@
                                 <div id="stockIngreso" class="text-right text-sm text-slate-500 font-semibold w-24"></div>
                             </div>
                         </div>
-                        <div><label class="block text-sm font-medium text-slate-700 mb-1">Cantidad:</label><input type="number" name="cantidad" class="w-full p-3 border rounded-lg"></div>
+                        <div><label class="block text-sm font-medium text-slate-700 mb-1">Cantidad:</label><input type="number" id="cantidadIngreso" class="w-full p-3 border rounded-lg"></div>
                     </div>
 
                     <div id="formVenta" class="hidden space-y-6">
@@ -97,7 +97,7 @@
                     </div>
 
                     <div id="formGestionConsigna" class="hidden space-y-6">
-                        <div class="flex justify-between items-center"><h3 class="font-semibold">Consignas Activas</h3><button type="button" id="refreshConsignasBtn" class="text-sky-600 font-bold">↻</button></div>
+                        <div class="flex justify-between items-center"><h3 class="font-semibold">Consignas Activas</h3><button type="button" id="refreshConsignasBtn" class="text-sky-600 font-bold">Actualizar ↻</button></div>
                         <select id="consignaSelect" class="w-full p-3 border rounded-lg"><option value="">Cargando...</option></select>
                         <div id="consignaDetails" class="hidden p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-sm">
                             <p><strong>Fecha:</strong> <span id="consFecha"></span></p>
@@ -105,12 +105,12 @@
                             <p><strong>Pendiente:</strong> <span id="consQty"></span></p>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
-                            <div><label class="text-xs">Facturar (Vendidas):</label><input type="number" id="cantVentaConsigna" class="w-full p-3 border rounded-lg" placeholder="0"></div>
-                            <div><label class="text-xs">Devolver (Bodega):</label><input type="number" id="cantDevolucionConsigna" class="w-full p-3 border rounded-lg" placeholder="0"></div>
+                            <div><label class="text-xs font-bold text-slate-600">Facturar (Vendidas):</label><input type="number" id="cantVentaConsigna" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0"></div>
+                            <div><label class="text-xs font-bold text-slate-600">Devolver (Bodega):</label><input type="number" id="cantDevolucionConsigna" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0"></div>
                         </div>
-                        <div id="consignaPrecioFields" class="hidden bg-slate-50 p-4 rounded-lg border space-y-3">
+                        <div id="consignaPrecioFields" class="hidden bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
                             <div class="grid grid-cols-2 gap-4">
-                                <div><label class="text-xs">Precio Unit.:</label><input type="number" id="precioUnitarioConsigna" step="0.01" class="w-full p-2 border rounded"></div>
+                                <div><label class="text-xs font-bold text-slate-600">Precio Unit.:</label><input type="number" id="precioUnitarioConsigna" step="0.01" class="w-full p-2 border border-slate-300 rounded"></div>
                                 <div class="flex items-center pt-4"><label class="flex items-center"><input type="checkbox" id="ivaConsigna" checked><span class="ml-1 text-xs">IVA (13%)</span></label></div>
                             </div>
                             <div class="flex items-center"><label class="flex items-center"><input type="checkbox" id="posConsigna"><span class="ml-2 text-xs">Pago POS</span></label>
@@ -118,12 +118,14 @@
                         </div>
                     </div>
                 </div>
-                <div class="mt-6"><label class="block text-sm font-medium mb-1">Descripción General:</label><textarea id="descripcionVenta" class="w-full p-3 border rounded-lg"></textarea></div>
-                <button type="submit" class="w-full mt-6 bg-sky-600 text-white p-4 rounded-lg font-bold shadow-lg">Procesar Operación</button>
+                <div class="mt-6">
+                    <label class="block text-sm font-medium mb-1 text-slate-700">Descripción / Notas:</label>
+                    <textarea id="descripcionGeneralInventario" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" placeholder="Detalle opcional del movimiento..."></textarea>
+                </div>
+                <button type="submit" class="w-full mt-6 bg-sky-600 text-white p-4 rounded-lg font-bold shadow-lg hover:bg-sky-700 transition-colors">Procesar Operación</button>
             </form>
         </div>
         
-        <!-- RESTO DE TABS (Gastos, Comercios, Etiquetas) SE MANTIENEN IGUAL -->
         <div id="expenseContent" class="hidden"><form id="expenseForm" class="space-y-4"><input type="hidden" name="formType" value="expense"><select name="tipoGasto" class="w-full p-3 border rounded-lg"><option>Transporte</option><option>Material de Empaque</option><option>Insumos</option><option>Publicidad</option><option>Otros</option></select><input type="number" name="valorGasto" placeholder="Valor $" class="w-full p-3 border rounded-lg"><label class="flex items-center"><input type="checkbox" name="gastoIncluyeIVA" checked><span class="ml-2 text-sm">IVA Incluido</span></label><div class="flex gap-4"><label><input type="radio" name="metodoPago" value="Efectivo" checked> Efectivo</label><label><input type="radio" name="metodoPago" value="Tarjeta"> Tarjeta</label></div><textarea name="descripcionGasto" placeholder="Descripción" class="w-full p-3 border rounded-lg"></textarea><button type="submit" class="w-full bg-sky-600 text-white p-3 rounded-lg font-bold">Registrar Gasto</button></form></div>
         <div id="clientsContent" class="hidden"><form id="clientForm" class="space-y-4"><input type="hidden" name="formType" value="client"><input type="text" name="nombreComercio" required placeholder="Nombre Comercio" class="w-full p-3 border rounded-lg"><button type="submit" class="w-full bg-green-600 text-white p-3 rounded-lg font-bold">Guardar Comercio</button></form></div>
         <div id="labelsContent" class="hidden"><form id="label-form" class="space-y-4"><input type="text" id="labelName" placeholder="Nombre" required class="w-full p-2 border rounded"><input type="tel" id="labelPhone" placeholder="Teléfono" required class="w-full p-2 border rounded"><textarea id="labelAddress" placeholder="Dirección" class="w-full p-2 border rounded"></textarea><div id="label-products-list" class="space-y-2"></div><button type="button" id="add-label-product-btn" class="text-sky-600 text-xs font-bold">+ Producto</button><input type="number" id="labelPrice" step="0.01" placeholder="Total $" class="w-full p-2 border rounded"><button type="submit" class="w-full bg-sky-600 text-white p-2 rounded font-bold">Generar Etiqueta</button></form></div>
@@ -232,7 +234,6 @@
             const loader = document.getElementById('loader'); const msg = document.getElementById('message');
             loader.style.display = 'block'; msg.classList.add('hidden');
             
-            const fd = new FormData(e.target);
             const mov = document.querySelector('input[name="mainMovementType"]:checked').value;
             let data = { formType: 'inventory', tipoMovimiento: mov };
 
@@ -247,10 +248,10 @@
                 data.incluyeIVA = document.getElementById('ivaConsigna').checked;
                 data.pagoConPOS = document.getElementById('posConsigna').checked;
                 data.comisionPOS = document.getElementById('comisionPOSConsigna').value;
-                data.descripcionVenta = document.getElementById('descripcionVenta').value;
+                data.descripcionVenta = document.getElementById('descripcionGeneralInventario').value;
             } else if (mov === 'Ingreso') {
                 data.producto = document.getElementById('productoIngreso').value;
-                data.cantidad = fd.get('cantidad');
+                data.cantidad = document.querySelector('[name="cantidad"]').value;
             } else {
                 data.productos = Array.from(document.querySelectorAll('.product-line')).map(l => ({ 
                     producto: l.querySelector('[name="producto"]').value, 
@@ -267,7 +268,7 @@
                 data.comisionPOS = document.getElementById('comisionPOS').value;
                 data.incluyeDelivery = document.getElementById('incluyeDelivery').checked;
                 data.montoDelivery = document.getElementById('montoDelivery').value;
-                data.descripcionVenta = document.getElementById('descripcionVenta').value;
+                data.descripcionVenta = document.getElementById('descripcionGeneralInventario').value;
             }
 
             try {
@@ -278,12 +279,12 @@
                 if (json.success) { 
                     e.target.reset(); document.getElementById('productLines').innerHTML = ''; 
                     document.getElementById('consignaDetails').classList.add('hidden');
+                    document.getElementById('descripcionGeneralInventario').value = '';
                     if (mov === 'GestionarConsigna') loadConsignments();
                 }
             } catch(err) { showMessage('Error de conexión', 'error'); loader.style.display = 'none'; }
         });
 
-        // Simple forms submit y Etiqueta Logic
         ['expense', 'client'].forEach(f => {
             document.getElementById(f + 'Form').addEventListener('submit', async e => {
                 e.preventDefault(); const fd = new FormData(e.target);
@@ -307,7 +308,8 @@
 
         function showMessage(msg, type) {
             const m = document.getElementById('message'); m.textContent = msg;
-            m.className = `text-sm p-3 rounded-lg block ${type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+            m.className = `text-sm p-3 rounded-lg block flex-grow ${type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+            m.classList.remove('hidden');
             setTimeout(() => m.classList.add('hidden'), 5000);
         }
 
