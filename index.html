@@ -111,7 +111,13 @@
                         <div id="consignaPrecioFields" class="hidden bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
                             <div class="grid grid-cols-2 gap-4">
                                 <div><label class="text-xs font-bold text-slate-600">Precio Unit.:</label><input type="number" id="precioUnitarioConsigna" step="0.01" class="w-full p-2 border border-slate-300 rounded"></div>
-                                <div class="flex items-center pt-4"><label class="flex items-center"><input type="checkbox" id="ivaConsigna" checked><span class="ml-1 text-xs">IVA (13%)</span></label></div>
+                                <div class="flex items-center pt-1">
+                                    <select id="modoIVAConsigna" class="w-full p-2 border border-slate-300 rounded text-xs">
+                                        <option value="incluido">IVA Incluido</option>
+                                        <option value="mas_iva">+ Calcular IVA</option>
+                                        <option value="exento">Sin IVA (Exento)</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="flex items-center"><label class="flex items-center"><input type="checkbox" id="posConsigna"><span class="ml-2 text-xs">Pago POS</span></label>
                             <div id="posFieldsConsigna" class="hidden ml-4"><input type="number" id="comisionPOSConsigna" value="3.5" class="w-16 p-1 border text-xs"></div></div>
@@ -187,17 +193,45 @@
             const container = document.getElementById('productLines');
             const div = document.createElement('div');
             div.className = 'product-line grid grid-cols-12 gap-2 border-b pb-2 items-center';
-            div.innerHTML = `<div class="col-span-12 sm:col-span-5"><select name="producto" class="w-full p-2 border rounded">${document.getElementById('productOptionsTemplate').innerHTML}</select><div class="stock-info text-[10px] text-slate-400"></div></div><div class="col-span-4 sm:col-span-2"><input type="number" name="cantidad" placeholder="Cant" class="w-full p-2 border rounded"></div><div class="col-span-4 sm:col-span-3 price-field"><input type="number" name="precioUnitario" placeholder="Precio" step="0.01" class="w-full p-2 border rounded"></div><div class="col-span-4 sm:col-span-2 flex items-center"><input type="checkbox" name="incluyeIVA" checked class="mr-1"><button type="button" class="remove-product-btn text-red-500 ml-2 font-bold">×</button></div>`;
+            div.innerHTML = `
+                <div class="col-span-12 sm:col-span-4">
+                    <select name="producto" class="w-full p-2 border rounded">${document.getElementById('productOptionsTemplate').innerHTML}</select>
+                    <div class="stock-info text-[10px] text-slate-400"></div>
+                </div>
+                <div class="col-span-4 sm:col-span-2">
+                    <input type="number" name="cantidad" placeholder="Cant" class="w-full p-2 border rounded">
+                </div>
+                <div class="col-span-4 sm:col-span-3">
+                    <input type="number" name="precioUnitario" placeholder="Precio" step="0.01" class="w-full p-2 border rounded">
+                </div>
+                <div class="col-span-4 sm:col-span-3 flex flex-col gap-1 items-center">
+                    <select name="modoIVA" class="w-full p-1 border rounded text-[10px]">
+                        <option value="incluido">IVA Inc.</option>
+                        <option value="mas_iva">+ IVA</option>
+                        <option value="exento">Sin IVA</option>
+                    </select>
+                    <button type="button" class="remove-product-btn text-red-500 font-bold">×</button>
+                </div>
+            `;
             container.appendChild(div);
-            div.querySelector('select').addEventListener('change', e => fetchStock(e.target.value, div.querySelector('.stock-info')));
+            div.querySelector('select[name="producto"]').addEventListener('change', e => fetchStock(e.target.value, div.querySelector('.stock-info')));
             div.querySelector('.remove-product-btn').addEventListener('click', () => { div.remove(); updateSaleTotal(); });
             div.addEventListener('input', updateSaleTotal);
+            div.addEventListener('change', updateSaleTotal);
         }
 
         function updateSaleTotal() {
             let total = 0;
             document.querySelectorAll('.product-line').forEach(l => {
-                total += (parseFloat(l.querySelector('[name="cantidad"]').value) || 0) * (parseFloat(l.querySelector('[name="precioUnitario"]').value) || 0);
+                const q = parseFloat(l.querySelector('[name="cantidad"]').value) || 0;
+                const p = parseFloat(l.querySelector('[name="precioUnitario"]').value) || 0;
+                const modo = l.querySelector('[name="modoIVA"]').value;
+                
+                if (modo === 'mas_iva') {
+                    total += (q * p) * 1.13;
+                } else {
+                    total += (q * p);
+                }
             });
             document.getElementById('saleTotal').textContent = `$${total.toFixed(2)}`;
         }
@@ -245,19 +279,19 @@
                 data.cantidadVenta = document.getElementById('cantVentaConsigna').value;
                 data.cantidadDevolucion = document.getElementById('cantDevolucionConsigna').value;
                 data.precioUnitario = document.getElementById('precioUnitarioConsigna').value;
-                data.incluyeIVA = document.getElementById('ivaConsigna').checked;
+                data.modoIVA = document.getElementById('modoIVAConsigna').value;
                 data.pagoConPOS = document.getElementById('posConsigna').checked;
                 data.comisionPOS = document.getElementById('comisionPOSConsigna').value;
                 data.descripcionVenta = document.getElementById('descripcionGeneralInventario').value;
             } else if (mov === 'Ingreso') {
                 data.producto = document.getElementById('productoIngreso').value;
-                data.cantidad = document.querySelector('[name="cantidad"]').value;
+                data.cantidad = document.getElementById('cantidadIngreso').value;
             } else {
                 data.productos = Array.from(document.querySelectorAll('.product-line')).map(l => ({ 
                     producto: l.querySelector('[name="producto"]').value, 
                     cantidad: l.querySelector('[name="cantidad"]').value, 
                     precioUnitario: l.querySelector('[name="precioUnitario"]').value, 
-                    incluyeIVA: l.querySelector('[name="incluyeIVA"]').checked 
+                    modoIVA: l.querySelector('[name="modoIVA"]').value 
                 }));
                 const isDelivery = document.querySelector('input[name="ventaDestino"]:checked').value === 'Delivery';
                 data.nombreCliente = mov === 'ConsignacionSalida' ? document.getElementById('numeroFactura').value : (isDelivery ? document.getElementById('nombreClienteDelivery').value : document.getElementById('clienteComercio').value);
