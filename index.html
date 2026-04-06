@@ -267,11 +267,22 @@
         }));
 
         async function fetchStock(prod, el) {
-            if (!prod) return; el.textContent = '...';
+            if (!prod) return;
+            // Validar si la URL es el placeholder
+            if (FULL_SCRIPT_URL.trim().includes('ESCRIBE_AQUI') || !FULL_SCRIPT_URL.trim().startsWith('http')) {
+                console.warn("URL de Apps Script no válida o no configurada.");
+                return;
+            }
+            el.textContent = '...';
             try {
-                const res = await fetch(`${FULL_SCRIPT_URL}?action=getStock&producto=${encodeURIComponent(prod)}`);
-                const json = await res.json(); el.textContent = json.success ? `Stock: ${json.stock}` : 'Stock: 0';
-            } catch(e) { el.textContent = 'Err'; }
+                const cleanUrl = FULL_SCRIPT_URL.trim();
+                const res = await fetch(`${cleanUrl}?action=getStock&producto=${encodeURIComponent(prod)}`);
+                const json = await res.json(); 
+                el.textContent = json.success ? `Stock: ${json.stock}` : 'Stock: 0';
+            } catch(e) { 
+                console.error("Error al obtener stock:", e);
+                el.textContent = 'Err'; 
+            }
         }
 
         function addProductLine() {
@@ -299,7 +310,9 @@
                 </div>
             `;
             container.appendChild(div);
-            div.querySelector('select[name="producto"]').addEventListener('change', e => fetchStock(e.target.value, div.querySelector('.stock-info')));
+            div.querySelector('select[name="producto"]').addEventListener('change', e => {
+                fetchStock(e.target.value, div.querySelector('.stock-info'));
+            });
             div.querySelector('.remove-product-btn').addEventListener('click', () => { div.remove(); updateSaleTotal(); });
             ['input', 'change'].forEach(evt => div.addEventListener(evt, updateSaleTotal));
         }
@@ -318,9 +331,11 @@
         document.getElementById('addProductBtn').addEventListener('click', addProductLine);
 
         async function loadConsignments() {
-            const sel = document.getElementById('consignaSelect'); sel.innerHTML = '<option>Cargando...</option>';
+            const sel = document.getElementById('consignaSelect'); 
+            if (FULL_SCRIPT_URL.trim().includes('ESCRIBE_AQUI') || !FULL_SCRIPT_URL.trim().startsWith('http')) return;
+            sel.innerHTML = '<option>Cargando...</option>';
             try {
-                const res = await fetch(`${FULL_SCRIPT_URL}?action=getConsignments`);
+                const res = await fetch(`${FULL_SCRIPT_URL.trim()}?action=getConsignments`);
                 const json = await res.json();
                 if (json.success && json.consignments.length > 0) {
                     sel.innerHTML = '<option value="" disabled selected>Seleccione consigna...</option>';
@@ -354,6 +369,11 @@
             const msg = document.getElementById('message');
             const btn = document.getElementById('btnSubmitInventory');
             
+            if (FULL_SCRIPT_URL.trim().includes('ESCRIBE_AQUI') || !FULL_SCRIPT_URL.trim().startsWith('http')) {
+                showMessage("Configura la URL de Apps Script en el código.", "error");
+                return;
+            }
+
             loader.style.display = 'block'; 
             msg.classList.add('hidden');
             btn.disabled = true;
@@ -381,7 +401,7 @@
                     data.cantidad = document.getElementById('cantidadIngreso').value;
                     if(!data.producto || !data.cantidad) throw new Error("Complete producto y cantidad.");
                 } else {
-                    data.productos = Array.from(document.querySelectorAll('.product-line')).map(l => ({ 
+                    const lines = Array.from(document.querySelectorAll('.product-line')).map(l => ({ 
                         producto: l.querySelector('[name="producto"]').value, 
                         cantidad: l.querySelector('[name="cantidad"]').value, 
                         precioUnitario: l.querySelector('[name="precioUnitario"]').value, 
@@ -391,6 +411,7 @@
                     const destRadio = document.querySelector('input[name="ventaDestino"]:checked');
                     const isDelivery = destRadio ? destRadio.value === 'Delivery' : true;
                     
+                    data.productos = lines;
                     data.nombreCliente = mov === 'ConsignacionSalida' ? document.getElementById('numeroFactura').value : (isDelivery ? document.getElementById('nombreClienteDelivery').value : document.getElementById('clienteComercio').value);
                     data.numeroFactura = document.getElementById('numeroFactura').value;
                     data.tipoVenta = isDelivery ? 'Delivery' : 'Comercio';
@@ -401,18 +422,18 @@
                     data.montoDelivery = document.getElementById('montoDelivery').value || 0;
                     
                     if(!data.nombreCliente && mov !== 'Ingreso') throw new Error("Indique el nombre del cliente o empresa.");
+                    if(data.productos.length === 0) throw new Error("Añada al menos un producto.");
                 }
 
                 data.descripcionVenta = document.getElementById('descripcionGeneralInventario').value;
 
-                const response = await fetch(FULL_SCRIPT_URL, { 
+                const response = await fetch(FULL_SCRIPT_URL.trim(), { 
                     method: 'POST', 
                     body: JSON.stringify(data),
                     redirect: 'follow'
                 });
                 
                 const result = await response.json();
-                
                 if (result.success) { 
                     showMessage(result.message || 'Operación exitosa', 'success');
                     e.target.reset(); 
@@ -420,6 +441,7 @@
                     document.getElementById('consignaDetails').classList.add('hidden');
                     document.getElementById('saleTotal').textContent = '$0.00';
                     document.getElementById('descripcionGeneralInventario').value = '';
+                    document.getElementById('stockIngreso').textContent = '';
                     if (mov === 'GestionarConsigna') loadConsignments();
                     toggleInventoryForms();
                 } else { 
@@ -448,14 +470,16 @@
                 e.preventDefault();
                 const loader = document.getElementById('loader');
                 const btn = e.target.querySelector('button');
+                if (FULL_SCRIPT_URL.trim().includes('ESCRIBE_AQUI') || !FULL_SCRIPT_URL.trim().startsWith('http')) {
+                    showMessage("Configura la URL de Apps Script.", "error");
+                    return;
+                }
                 loader.style.display = 'block';
                 if(btn) btn.disabled = true;
-                
                 const fd = new FormData(expenseForm);
                 const data = Object.fromEntries(fd);
-                
                 try {
-                    const res = await fetch(FULL_SCRIPT_URL, { 
+                    const res = await fetch(FULL_SCRIPT_URL.trim(), { 
                         method: 'POST', 
                         body: JSON.stringify(data), 
                         redirect: 'follow' 
@@ -482,11 +506,12 @@
                 e.preventDefault();
                 const loader = document.getElementById('loader');
                 const btn = e.target.querySelector('button');
+                if (FULL_SCRIPT_URL.trim().includes('ESCRIBE_AQUI') || !FULL_SCRIPT_URL.trim().startsWith('http')) return;
                 loader.style.display = 'block';
                 if(btn) btn.disabled = true;
                 const fd = new FormData(clientForm);
                 try {
-                    const res = await fetch(FULL_SCRIPT_URL, { 
+                    const res = await fetch(FULL_SCRIPT_URL.trim(), { 
                         method: 'POST', 
                         body: JSON.stringify(Object.fromEntries(fd)), 
                         redirect: 'follow' 
@@ -507,7 +532,7 @@
 
         document.getElementById('add-label-product-btn').addEventListener('click', () => {
             const d = document.createElement('div'); d.className = "flex gap-2 mb-2";
-            d.innerHTML = `<input type="number" placeholder="Cant" class="w-16 p-1 border rounded border-slate-300"> <select class="flex-grow p-1 border rounded border-slate-300 text-sm">${document.getElementById('productOptionsTemplate').innerHTML}</select>`;
+            d.innerHTML = `<input type="number" placeholder="Cant" class="w-16 p-1 border rounded border-slate-300 text-sm"> <select class="flex-grow p-1 border rounded border-slate-300 text-sm">${document.getElementById('productOptionsTemplate').innerHTML}</select>`;
             document.getElementById('label-products-list').appendChild(d);
         });
 
@@ -521,10 +546,10 @@
 
         async function loadClients() {
             const sel = document.getElementById('clienteComercio'); 
-            if(!sel) return;
+            if(!sel || FULL_SCRIPT_URL.trim().includes('ESCRIBE_AQUI') || !FULL_SCRIPT_URL.trim().startsWith('http')) return;
             sel.innerHTML = '<option>Cargando...</option>';
             try {
-                const res = await fetch(`${FULL_SCRIPT_URL}?action=getClients`);
+                const res = await fetch(`${FULL_SCRIPT_URL.trim()}?action=getClients`);
                 const json = await res.json();
                 if (json.success && json.clients.length > 0) {
                     sel.innerHTML = '<option value="" disabled selected>Seleccione comercio...</option>';
@@ -545,8 +570,13 @@
             if (isCom) loadClients();
         }));
 
+        // Inicializar opciones de productos y listeners de stock
+        const prodOptionsHTML = document.getElementById('productOptionsTemplate').innerHTML;
         const prodIngreso = document.getElementById('productoIngreso');
-        if(prodIngreso) prodIngreso.innerHTML = document.getElementById('productOptionsTemplate').innerHTML;
+        if(prodIngreso) {
+            prodIngreso.innerHTML = prodOptionsHTML;
+            prodIngreso.addEventListener('change', e => fetchStock(e.target.value, document.getElementById('stockIngreso')));
+        }
         
         document.getElementById('print-btn').addEventListener('click', () => window.print());
         document.getElementById('clear-btn').addEventListener('click', () => document.getElementById('labels-container').innerHTML = '');
