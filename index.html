@@ -88,7 +88,10 @@
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div id="divNombreCliente"><label class="block text-sm font-medium text-slate-700">Cliente:</label><input type="text" id="nombreClienteDelivery" class="w-full p-3 border rounded-lg border-slate-300"></div>
-                            <div id="divComercioSelect" class="hidden"><label class="block text-sm font-medium text-slate-700">Comercio:</label><select id="clienteComercio" class="w-full p-3 border rounded-lg border-slate-300"></select></div>
+                            <div id="divComercioSelect" class="hidden">
+                                <label class="block text-sm font-medium text-slate-700">Comercio:</label>
+                                <select id="clienteComercio" class="w-full p-3 border rounded-lg border-slate-300 bg-white shadow-sm"></select>
+                            </div>
                             <div><label class="block text-sm font-medium text-slate-700" id="lblFactura">Referencia/Factura:</label><input type="text" id="numeroFactura" class="w-full p-3 border rounded-lg border-slate-300"></div>
                         </div>
                         <div class="flex items-center p-3 bg-blue-50 rounded-lg border border-blue-100" id="divMuestra">
@@ -133,7 +136,6 @@
             </form>
         </div>
         
-        <!-- PESTAÑA GASTOS -->
         <div id="expenseContent" class="hidden">
             <form id="expenseForm" class="space-y-4">
                 <input type="hidden" name="formType" value="expense">
@@ -226,10 +228,35 @@
             if(activeBtn) activeBtn.classList.add('active');
             document.getElementById('action-buttons').classList.toggle('hidden', tab !== 'labels');
         }
+        
         ['Inventory', 'Expense', 'Clients', 'Labels'].forEach(t => {
             const btn = document.getElementById('tab' + t + 'Btn');
             if(btn) btn.addEventListener('click', () => switchTab(t.toLowerCase()));
         });
+
+        async function loadClients() {
+            const sel = document.getElementById('clienteComercio'); 
+            if(!sel) return;
+            sel.innerHTML = '<option value="">Cargando comercios...</option>';
+            try {
+                const res = await fetch(`${FULL_SCRIPT_URL.trim()}?action=getClients`);
+                const json = await res.json();
+                if (json.success && json.clients && json.clients.length > 0) {
+                    sel.innerHTML = '<option value="" disabled selected>Seleccione comercio...</option>';
+                    json.clients.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c;
+                        opt.textContent = c;
+                        sel.appendChild(opt);
+                    });
+                } else {
+                    sel.innerHTML = '<option value="" disabled>No hay comercios registrados</option>';
+                }
+            } catch(e) { 
+                console.error("Error al cargar comercios:", e);
+                sel.innerHTML = '<option value="" disabled>Error al conectar</option>'; 
+            }
+        }
 
         const movementRadios = document.getElementsByName('mainMovementType');
         movementRadios.forEach(r => r.addEventListener('change', () => {
@@ -240,8 +267,13 @@
             document.getElementById('formVenta').classList.toggle('hidden', val !== 'Venta' && val !== 'ConsignacionSalida');
             document.getElementById('formGestionConsigna').classList.toggle('hidden', val !== 'GestionarConsigna');
             document.getElementById('lblFactura').textContent = val === 'ConsignacionSalida' ? "Receptor (Empresa/Nombre):" : "Referencia/Factura:";
+            
             if (val === 'GestionarConsigna') loadConsignments();
             if ((val === 'Venta' || val === 'ConsignacionSalida') && document.getElementById('productLines').children.length === 0) addProductLine();
+            
+            // Si es venta o consigna, verificar si está seleccionado "Comercio" para cargar la lista
+            const destRadio = document.querySelector('input[name="ventaDestino"]:checked');
+            if (destRadio && destRadio.value === 'Comercio') loadClients();
         }));
 
         async function fetchStock(prod, el) {
@@ -298,35 +330,26 @@
             });
             document.getElementById('saleTotal').textContent = `$${total.toFixed(2)}`;
         }
+        
         document.getElementById('addProductBtn').addEventListener('click', addProductLine);
 
         async function loadConsignments() {
             const sel = document.getElementById('consignaSelect'); 
-            sel.innerHTML = '<option>Cargando...</option>';
+            sel.innerHTML = '<option>Cargando consignas...</option>';
             try {
                 const res = await fetch(`${FULL_SCRIPT_URL.trim()}?action=getConsignments`);
                 const json = await res.json();
-                if (json.success && json.consignments.length > 0) {
+                if (json.success && json.consignments && json.consignments.length > 0) {
                     sel.innerHTML = '<option value="" disabled selected>Seleccione consigna...</option>';
                     json.consignments.forEach(c => {
                         const opt = document.createElement('option');
-                        opt.value = JSON.stringify(c); opt.textContent = `[${c.fecha}] ${c.cliente} | ${c.producto} (${c.cantidad})`;
+                        opt.value = JSON.stringify(c); 
+                        opt.textContent = `[${c.fecha}] ${c.cliente} | ${c.producto} (${c.cantidad})`;
                         sel.appendChild(opt);
                     });
-                } else sel.innerHTML = '<option disabled>No hay pendientes</option>';
-            } catch(e) { sel.innerHTML = '<option disabled>Error de carga</option>'; }
+                } else sel.innerHTML = '<option value="" disabled>No hay consignas pendientes</option>';
+            } catch(e) { sel.innerHTML = '<option value="" disabled>Error de carga</option>'; }
         }
-
-        document.getElementById('consignaSelect').addEventListener('change', e => {
-            if(!e.target.value) return;
-            try {
-                const data = JSON.parse(e.target.value);
-                document.getElementById('consignaDetails').classList.remove('hidden');
-                document.getElementById('consFecha').textContent = data.fecha;
-                document.getElementById('consProd').textContent = data.producto;
-                document.getElementById('consQty').textContent = data.cantidad;
-            } catch(err) {}
-        });
 
         document.getElementById('inventoryForm').addEventListener('submit', async e => {
             e.preventDefault();
@@ -383,41 +406,55 @@
             finally { loader.style.display = 'none'; btn.disabled = false; }
         });
 
-        const expenseForm = document.getElementById('expenseForm');
-        if(expenseForm) {
-            expenseForm.addEventListener('submit', async e => {
-                e.preventDefault();
-                const loader = document.getElementById('loader');
-                loader.style.display = 'block';
-                const fd = new FormData(expenseForm);
-                try {
-                    const res = await fetch(FULL_SCRIPT_URL.trim(), { method: 'POST', body: JSON.stringify(Object.fromEntries(fd)), redirect: 'follow' });
-                    const json = await res.json();
-                    if(json.success) { showMessage('Gasto registrado', 'success'); expenseForm.reset(); }
-                    else throw new Error(json.error);
-                } catch(e) { showMessage(e.message, 'error'); } 
-                finally { loader.style.display = 'none'; }
-            });
-        }
+        document.querySelectorAll('input[name="ventaDestino"]').forEach(r => r.addEventListener('change', () => {
+            const checked = document.querySelector('input[name="ventaDestino"]:checked');
+            const isCom = checked ? checked.value === 'Comercio' : false;
+            document.getElementById('divNombreCliente').classList.toggle('hidden', isCom);
+            document.getElementById('divComercioSelect').classList.toggle('hidden', !isCom);
+            if (isCom) loadClients();
+        }));
 
-        const clientForm = document.getElementById('clientForm');
-        if(clientForm) {
-            clientForm.addEventListener('submit', async e => {
-                e.preventDefault();
-                const loader = document.getElementById('loader');
-                loader.style.display = 'block';
-                try {
-                    const res = await fetch(FULL_SCRIPT_URL.trim(), { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(clientForm))), redirect: 'follow' });
-                    if((await res.json()).success) { showMessage('Comercio guardado', 'success'); clientForm.reset(); }
-                } catch(e) { showMessage('Error', 'error'); } 
-                finally { loader.style.display = 'none'; }
-            });
+        const prodIngreso = document.getElementById('productoIngreso');
+        if(prodIngreso) {
+            prodIngreso.innerHTML = document.getElementById('productOptionsTemplate').innerHTML;
+            prodIngreso.addEventListener('change', e => fetchStock(e.target.value, document.getElementById('stockIngreso')));
         }
+        
+        function toggleInventoryForms() {
+            const checked = document.querySelector('input[name="mainMovementType"]:checked');
+            if(!checked) return;
+            document.getElementById('formIngreso').classList.toggle('hidden', checked.value !== 'Ingreso');
+            document.getElementById('formVenta').classList.toggle('hidden', checked.value !== 'Venta' && checked.value !== 'ConsignacionSalida');
+            document.getElementById('formGestionConsigna').classList.toggle('hidden', checked.value !== 'GestionarConsigna');
+        }
+        
+        toggleInventoryForms();
 
-        document.getElementById('add-label-product-btn').addEventListener('click', () => {
-            const d = document.createElement('div'); d.className = "flex gap-2 mb-2";
-            d.innerHTML = `<input type="number" placeholder="Cant" class="w-16 p-1 border rounded border-slate-300 text-sm"> <select class="flex-grow p-1 border rounded border-slate-300 text-sm">${document.getElementById('productOptionsTemplate').innerHTML}</select>`;
-            document.getElementById('label-products-list').appendChild(d);
+        // Otros manejadores de formularios (Gasto, Cliente, etc.)
+        document.getElementById('expenseForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const loader = document.getElementById('loader');
+            loader.style.display = 'block';
+            try {
+                const res = await fetch(FULL_SCRIPT_URL.trim(), { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))), redirect: 'follow' });
+                if((await res.json()).success) { showMessage('Gasto registrado', 'success'); e.target.reset(); }
+            } catch(e) { showMessage('Error', 'error'); } 
+            finally { loader.style.display = 'none'; }
+        });
+
+        document.getElementById('clientForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const loader = document.getElementById('loader');
+            loader.style.display = 'block';
+            try {
+                const res = await fetch(FULL_SCRIPT_URL.trim(), { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))), redirect: 'follow' });
+                if((await res.json()).success) { 
+                    showMessage('Comercio guardado', 'success'); 
+                    e.target.reset(); 
+                    loadClients(); // Recargar dropdown
+                }
+            } catch(e) { showMessage('Error', 'error'); } 
+            finally { loader.style.display = 'none'; }
         });
 
         document.getElementById('label-form').addEventListener('submit', e => {
@@ -429,23 +466,15 @@
             e.target.reset(); document.getElementById('label-products-list').innerHTML = '';
         });
 
-        const prodIngreso = document.getElementById('productoIngreso');
-        if(prodIngreso) {
-            prodIngreso.innerHTML = document.getElementById('productOptionsTemplate').innerHTML;
-            prodIngreso.addEventListener('change', e => fetchStock(e.target.value, document.getElementById('stockIngreso')));
-        }
-        
+        document.getElementById('add-label-product-btn').addEventListener('click', () => {
+            const d = document.createElement('div'); d.className = "flex gap-2 mb-2";
+            d.innerHTML = `<input type="number" placeholder="Cant" class="w-16 p-1 border rounded border-slate-300 text-sm"> <select class="flex-grow p-1 border rounded border-slate-300 text-sm">${document.getElementById('productOptionsTemplate').innerHTML}</select>`;
+            document.getElementById('label-products-list').appendChild(d);
+        });
+
         document.getElementById('print-btn').addEventListener('click', () => window.print());
         document.getElementById('clear-btn').addEventListener('click', () => document.getElementById('labels-container').innerHTML = '');
-        
-        function toggleInventoryForms() {
-            const checked = document.querySelector('input[name="mainMovementType"]:checked');
-            if(!checked) return;
-            document.getElementById('formIngreso').classList.toggle('hidden', checked.value !== 'Ingreso');
-            document.getElementById('formVenta').classList.toggle('hidden', checked.value !== 'Venta' && checked.value !== 'ConsignacionSalida');
-            document.getElementById('formGestionConsigna').classList.toggle('hidden', checked.value !== 'GestionarConsigna');
-        }
-        toggleInventoryForms();
+        document.getElementById('tipoGasto').addEventListener('change', e => document.getElementById('divGastoOtros').classList.toggle('hidden', e.target.value !== 'Otros'));
     </script>
 </body>
 </html>
