@@ -62,18 +62,18 @@
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Producto:</label>
                             <div class="flex items-center space-x-3">
-                                <select id="productoIngreso" name="producto" class="w-full p-3 border border-slate-300 rounded-lg"></select>
+                                <select id="productoIngreso" name="producto" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm"></select>
                                 <div id="stockIngreso" class="text-right text-sm text-slate-500 font-semibold w-24"></div>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-1">Cantidad:</label>
-                                <input type="number" id="cantidadIngreso" class="w-full p-3 border rounded-lg border-slate-300">
+                                <input type="number" id="cantidadIngreso" class="w-full p-3 border rounded-lg border-slate-300 shadow-sm">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-1">Costo Unitario ($):</label>
-                                <input type="number" id="costoIngreso" step="0.01" placeholder="0.00" class="w-full p-3 border rounded-lg border-slate-300">
+                                <input type="number" id="costoIngreso" step="0.01" placeholder="0.00" class="w-full p-3 border rounded-lg border-slate-300 shadow-sm">
                             </div>
                         </div>
                     </div>
@@ -91,12 +91,10 @@
                             <div id="divComercioSelect" class="hidden"><label class="block text-sm font-medium text-slate-700">Comercio:</label><select id="clienteComercio" class="w-full p-3 border rounded-lg border-slate-300"></select></div>
                             <div><label class="block text-sm font-medium text-slate-700" id="lblFactura">Referencia/Factura:</label><input type="text" id="numeroFactura" class="w-full p-3 border rounded-lg border-slate-300"></div>
                         </div>
-
                         <div class="flex items-center p-3 bg-blue-50 rounded-lg border border-blue-100" id="divMuestra">
                             <input type="checkbox" id="esMuestra" class="h-5 w-5 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
                             <label for="esMuestra" class="ml-2 block text-sm font-semibold text-blue-800 uppercase tracking-wide">Registrar como Muestra (Sin Cobro)</label>
                         </div>
-
                         <div id="containerExtrasVenta" class="space-y-4">
                             <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 shadow-sm">
                                 <label class="flex items-center cursor-pointer"><input type="checkbox" id="pagoConPOS" class="h-4 w-4 text-sky-600 rounded"><span class="ml-2 text-sm font-medium">Pago POS</span></label>
@@ -120,24 +118,8 @@
                             <p><strong>Pendiente:</strong> <span id="consQty"></span></p>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
-                            <div><label class="text-xs font-bold text-slate-600 uppercase">Facturar (Vendidas):</label><input type="number" id="cantVentaConsigna" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0"></div>
-                            <div><label class="text-xs font-bold text-slate-600 uppercase">Devolver (Bodega):</label><input type="number" id="cantDevolucionConsigna" class="w-full p-3 border border-slate-300 rounded-lg" placeholder="0"></div>
-                        </div>
-                        <div id="consignaPrecioFields" class="hidden bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3 shadow-sm">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div><label class="text-xs font-bold text-slate-600 uppercase">Precio Unit.:</label><input type="number" id="precioUnitarioConsigna" step="0.01" class="w-full p-2 border border-slate-300 rounded shadow-sm"></div>
-                                <div class="flex items-center pt-4">
-                                    <select id="modoIVAConsigna" class="w-full p-2 border border-slate-300 rounded text-xs shadow-sm bg-white">
-                                        <option value="incluido">IVA Incluido</option>
-                                        <option value="mas_iva">+ Calcular IVA</option>
-                                        <option value="exento">Sin IVA (Exento)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="flex items-center">
-                                <label class="flex items-center cursor-pointer"><input type="checkbox" id="posConsigna" class="h-4 w-4 text-sky-600 rounded"><span class="ml-2 text-xs font-semibold">Pago POS</span></label>
-                                <div id="posFieldsConsigna" class="hidden ml-4"><input type="number" id="comisionPOSConsigna" value="3.5" step="0.01" class="w-16 p-1 border border-slate-300 text-xs rounded"></div>
-                            </div>
+                            <div><label class="text-xs font-bold text-slate-600 uppercase">Facturar (Vendidas):</label><input type="number" id="cantVentaConsigna" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm" placeholder="0"></div>
+                            <div><label class="text-xs font-bold text-slate-600 uppercase">Devolver (Bodega):</label><input type="number" id="cantDevolucionConsigna" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm" placeholder="0"></div>
                         </div>
                     </div>
                 </div>
@@ -191,10 +173,6 @@
                         <label class="flex items-center cursor-pointer"><input type="radio" name="metodoPago" value="Tarjeta" class="mr-2"> <span class="text-sm">Tarjeta</span></label>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Descripción / Notas:</label>
-                    <textarea name="descripcionGasto" placeholder="Detalles adicionales..." class="w-full p-3 border border-slate-300 rounded-lg shadow-sm"></textarea>
-                </div>
                 <button type="submit" class="w-full bg-sky-600 text-white p-4 rounded-lg font-bold shadow-md hover:bg-sky-700 transition-colors uppercase tracking-wider">Registrar Gasto</button>
             </form>
         </div>
@@ -225,9 +203,6 @@
     </template>
 
     <script>
-        /**
-         * CONFIGURACIÓN: Reemplaza la URL de abajo con la URL de tu Web App de Google Apps Script
-         */
         const FULL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMapJvU3t9B7c0sfZIQRJbjPZpqjVVQCF9gsJrQd4evSVDCeNnPKlRfdkPLoxkZE8JyA/exec';
         
         function showMessage(msg, type) {
@@ -271,13 +246,12 @@
 
         async function fetchStock(prod, el) {
             if (!prod) return;
-            if (FULL_SCRIPT_URL.trim().includes('ESCRIBE_AQUI') || !FULL_SCRIPT_URL.trim().startsWith('http')) return;
             el.textContent = '...';
             try {
                 const cleanUrl = FULL_SCRIPT_URL.trim();
                 const res = await fetch(`${cleanUrl}?action=getStock&producto=${encodeURIComponent(prod)}`);
                 const json = await res.json(); 
-                el.textContent = json.success ? `Stock: ${json.stock}` : 'Stock: 0';
+                el.textContent = json.success ? `Total: ${json.stock}` : 'Total: 0';
             } catch(e) { el.textContent = 'Err'; }
         }
 
@@ -328,7 +302,6 @@
 
         async function loadConsignments() {
             const sel = document.getElementById('consignaSelect'); 
-            if (FULL_SCRIPT_URL.trim().includes('ESCRIBE_AQUI') || !FULL_SCRIPT_URL.trim().startsWith('http')) return;
             sel.innerHTML = '<option>Cargando...</option>';
             try {
                 const res = await fetch(`${FULL_SCRIPT_URL.trim()}?action=getConsignments`);
@@ -355,105 +328,75 @@
             } catch(err) {}
         });
 
-        document.getElementById('cantVentaConsigna').addEventListener('input', e => {
-            document.getElementById('consignaPrecioFields').classList.toggle('hidden', parseFloat(e.target.value) <= 0);
-        });
-
         document.getElementById('inventoryForm').addEventListener('submit', async e => {
             e.preventDefault();
             const loader = document.getElementById('loader');
             const msg = document.getElementById('message');
             const btn = document.getElementById('btnSubmitInventory');
             
-            if (FULL_SCRIPT_URL.trim().includes('ESCRIBE_AQUI') || !FULL_SCRIPT_URL.trim().startsWith('http')) {
-                showMessage("Configura la URL de Apps Script en el código.", "error");
-                return;
-            }
-            loader.style.display = 'block'; 
-            msg.classList.add('hidden');
-            btn.disabled = true;
+            loader.style.display = 'block'; msg.classList.add('hidden'); btn.disabled = true;
             try {
                 const movRadio = document.querySelector('input[name="mainMovementType"]:checked');
-                if(!movRadio) throw new Error("Seleccione un tipo de movimiento.");
                 const mov = movRadio.value;
                 let data = { formType: 'inventory', tipoMovimiento: mov };
 
-                if (mov === 'GestionarConsigna') {
-                    const selVal = document.getElementById('consignaSelect').value;
-                    if(!selVal) throw new Error("Seleccione una consigna activa.");
-                    const consData = JSON.parse(selVal);
-                    data.idConsigna = consData.id;
-                    data.cantidadVenta = document.getElementById('cantVentaConsigna').value || 0;
-                    data.cantidadDevolucion = document.getElementById('cantDevolucionConsigna').value || 0;
-                    data.precioUnitario = document.getElementById('precioUnitarioConsigna').value || 0;
-                    data.modoIVA = document.getElementById('modoIVAConsigna').value;
-                    data.pagoConPOS = document.getElementById('posConsigna').checked;
-                    data.comisionPOS = document.getElementById('comisionPOSConsigna').value || 3.5;
-                } else if (mov === 'Ingreso') {
+                if (mov === 'Ingreso') {
                     data.producto = document.getElementById('productoIngreso').value;
                     data.cantidad = document.getElementById('cantidadIngreso').value;
-                    data.costo = document.getElementById('costoIngreso').value; // Captura de costo
+                    data.costo = document.getElementById('costoIngreso').value;
                     if(!data.producto || !data.cantidad) throw new Error("Complete producto y cantidad.");
-                } else {
-                    const lines = Array.from(document.querySelectorAll('.product-line')).map(l => ({ 
+                } else if (mov === 'Venta' || mov === 'ConsignacionSalida') {
+                    data.productos = Array.from(document.querySelectorAll('.product-line')).map(l => ({ 
                         producto: l.querySelector('[name="producto"]').value, 
                         cantidad: l.querySelector('[name="cantidad"]').value, 
                         precioUnitario: l.querySelector('[name="precioUnitario"]').value, 
                         modoIVA: l.querySelector('[name="modoIVA"]').value 
                     }));
                     const destRadio = document.querySelector('input[name="ventaDestino"]:checked');
-                    const isDelivery = destRadio ? destRadio.value === 'Delivery' : true;
-                    data.productos = lines;
-                    data.nombreCliente = mov === 'ConsignacionSalida' ? document.getElementById('numeroFactura').value : (isDelivery ? document.getElementById('nombreClienteDelivery').value : document.getElementById('clienteComercio').value);
+                    data.tipoVenta = destRadio.value;
+                    data.nombreCliente = mov === 'ConsignacionSalida' ? document.getElementById('numeroFactura').value : (data.tipoVenta === 'Delivery' ? document.getElementById('nombreClienteDelivery').value : document.getElementById('clienteComercio').value);
                     data.numeroFactura = document.getElementById('numeroFactura').value;
-                    data.tipoVenta = isDelivery ? 'Delivery' : 'Comercio';
                     data.esMuestra = document.getElementById('esMuestra').checked;
                     data.pagoConPOS = document.getElementById('pagoConPOS').checked;
                     data.comisionPOS = document.getElementById('comisionPOS').value || 3.5;
                     data.incluyeDelivery = document.getElementById('incluyeDelivery').checked;
                     data.montoDelivery = document.getElementById('montoDelivery').value || 0;
-                    if(!data.nombreCliente && mov !== 'Ingreso') throw new Error("Indique el nombre del cliente o empresa.");
-                    if(data.productos.length === 0) throw new Error("Añada al menos un producto.");
+                } else if (mov === 'GestionarConsigna') {
+                    const selVal = document.getElementById('consignaSelect').value;
+                    const consData = JSON.parse(selVal);
+                    data.idConsigna = consData.id;
+                    data.cantidadVenta = document.getElementById('cantVentaConsigna').value || 0;
+                    data.cantidadDevolucion = document.getElementById('cantDevolucionConsigna').value || 0;
                 }
-                data.descripcionVenta = document.getElementById('descripcionGeneralInventario').value;
+                
                 const response = await fetch(FULL_SCRIPT_URL.trim(), { method: 'POST', body: JSON.stringify(data), redirect: 'follow' });
                 const result = await response.json();
                 if (result.success) { 
-                    showMessage(result.message || 'Operación exitosa', 'success');
+                    showMessage(result.message, 'success');
                     e.target.reset(); 
                     document.getElementById('productLines').innerHTML = ''; 
-                    document.getElementById('consignaDetails').classList.add('hidden');
-                    document.getElementById('saleTotal').textContent = '$0.00';
-                    document.getElementById('descripcionGeneralInventario').value = '';
                     document.getElementById('stockIngreso').textContent = '';
                     if (mov === 'GestionarConsigna') loadConsignments();
                     toggleInventoryForms();
-                } else throw new Error(result.error || "Error en el servidor"); 
-            } catch(err) { showMessage(err.message || 'Error de conexión', 'error'); } 
+                } else throw new Error(result.error); 
+            } catch(err) { showMessage(err.message, 'error'); } 
             finally { loader.style.display = 'none'; btn.disabled = false; }
         });
-
-        const tipoGastoSelect = document.getElementById('tipoGasto');
-        if(tipoGastoSelect) tipoGastoSelect.addEventListener('change', e => document.getElementById('divGastoOtros').classList.toggle('hidden', e.target.value !== 'Otros'));
 
         const expenseForm = document.getElementById('expenseForm');
         if(expenseForm) {
             expenseForm.addEventListener('submit', async e => {
                 e.preventDefault();
                 const loader = document.getElementById('loader');
-                const btn = e.target.querySelector('button');
-                if (FULL_SCRIPT_URL.trim().includes('ESCRIBE_AQUI') || !FULL_SCRIPT_URL.trim().startsWith('http')) return;
                 loader.style.display = 'block';
-                if(btn) btn.disabled = true;
                 const fd = new FormData(expenseForm);
-                const data = Object.fromEntries(fd);
                 try {
-                    const res = await fetch(FULL_SCRIPT_URL.trim(), { method: 'POST', body: JSON.stringify(data), redirect: 'follow' });
+                    const res = await fetch(FULL_SCRIPT_URL.trim(), { method: 'POST', body: JSON.stringify(Object.fromEntries(fd)), redirect: 'follow' });
                     const json = await res.json();
-                    if(json.success) { showMessage('Gasto registrado con éxito', 'success'); expenseForm.reset(); document.getElementById('divGastoOtros').classList.add('hidden'); }
+                    if(json.success) { showMessage('Gasto registrado', 'success'); expenseForm.reset(); }
                     else throw new Error(json.error);
-                } catch(e) { showMessage(e.message || 'Error de conexión', 'error'); } 
-                finally { loader.style.display = 'none'; if(btn) btn.disabled = false; }
+                } catch(e) { showMessage(e.message, 'error'); } 
+                finally { loader.style.display = 'none'; }
             });
         }
 
@@ -462,18 +405,12 @@
             clientForm.addEventListener('submit', async e => {
                 e.preventDefault();
                 const loader = document.getElementById('loader');
-                const btn = e.target.querySelector('button');
-                if (FULL_SCRIPT_URL.trim().includes('ESCRIBE_AQUI') || !FULL_SCRIPT_URL.trim().startsWith('http')) return;
                 loader.style.display = 'block';
-                if(btn) btn.disabled = true;
-                const fd = new FormData(clientForm);
                 try {
-                    const res = await fetch(FULL_SCRIPT_URL.trim(), { method: 'POST', body: JSON.stringify(Object.fromEntries(fd)), redirect: 'follow' });
-                    const json = await res.json();
-                    if(json.success) { showMessage('Registro completado', 'success'); clientForm.reset(); }
-                    else throw new Error(json.error);
-                } catch(e) { showMessage(e.message || 'Error de conexión', 'error'); } 
-                finally { loader.style.display = 'none'; if(btn) btn.disabled = false; }
+                    const res = await fetch(FULL_SCRIPT_URL.trim(), { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(clientForm))), redirect: 'follow' });
+                    if((await res.json()).success) { showMessage('Comercio guardado', 'success'); clientForm.reset(); }
+                } catch(e) { showMessage('Error', 'error'); } 
+                finally { loader.style.display = 'none'; }
             });
         }
 
@@ -484,43 +421,17 @@
         });
 
         document.getElementById('label-form').addEventListener('submit', e => {
-            e.preventDefault(); const container = document.getElementById('labels-container');
+            e.preventDefault(); 
             const l = document.createElement('div'); l.className = 'label shadow-sm';
-            const prods = Array.from(document.getElementById('label-products-list').children).map(c => `${c.querySelector('input').value}x ${c.querySelector('select').value}`).filter(t => !t.includes('null')).join(', ');
-            l.innerHTML = `<p class="text-sm font-bold border-b border-slate-200 pb-1 mb-1 text-slate-800">${document.getElementById('labelName').value}</p><p class="text-xs text-slate-600">Tel: ${document.getElementById('labelPhone').value}</p><p class="text-xs text-slate-600 mb-2">${document.getElementById('labelAddress').value}</p><p class="text-[10px] italic text-slate-500 border-t border-slate-100 pt-1">${prods}</p><p class="text-sm font-bold text-sky-700 mt-2">TOTAL: $${parseFloat(document.getElementById('labelPrice').value || 0).toFixed(2)}</p>`;
-            container.appendChild(l); e.target.reset(); document.getElementById('label-products-list').innerHTML = '';
+            const prods = Array.from(document.getElementById('label-products-list').children).map(c => `${c.querySelector('input').value}x ${c.querySelector('select').value}`).join(', ');
+            l.innerHTML = `<p class="text-sm font-bold border-b pb-1 mb-1">${document.getElementById('labelName').value}</p><p class="text-xs">Tel: ${document.getElementById('labelPhone').value}</p><p class="text-xs mb-2">${document.getElementById('labelAddress').value}</p><p class="text-[10px] italic pt-1">${prods}</p><p class="text-sm font-bold text-sky-700 mt-2">TOTAL: $${parseFloat(document.getElementById('labelPrice').value || 0).toFixed(2)}</p>`;
+            document.getElementById('labels-container').appendChild(l); 
+            e.target.reset(); document.getElementById('label-products-list').innerHTML = '';
         });
 
-        async function loadClients() {
-            const sel = document.getElementById('clienteComercio'); 
-            if(!sel || FULL_SCRIPT_URL.trim().includes('ESCRIBE_AQUI') || !FULL_SCRIPT_URL.trim().startsWith('http')) return;
-            sel.innerHTML = '<option>Cargando...</option>';
-            try {
-                const res = await fetch(`${FULL_SCRIPT_URL.trim()}?action=getClients`);
-                const json = await res.json();
-                if (json.success && json.clients.length > 0) {
-                    sel.innerHTML = '<option value="" disabled selected>Seleccione comercio...</option>';
-                    json.clients.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
-                } else sel.innerHTML = '<option disabled>Sin clientes</option>';
-            } catch(e) { sel.innerHTML = '<option disabled>Error</option>'; }
-        }
-
-        document.getElementById('pagoConPOS').addEventListener('change', e => document.getElementById('posFields').classList.toggle('hidden', !e.target.checked));
-        document.getElementById('incluyeDelivery').addEventListener('change', e => document.getElementById('deliveryFields').classList.toggle('hidden', !e.target.checked));
-        document.getElementById('posConsigna').addEventListener('change', e => document.getElementById('posFieldsConsigna').classList.toggle('hidden', !e.target.checked));
-        
-        document.querySelectorAll('input[name="ventaDestino"]').forEach(r => r.addEventListener('change', () => {
-            const checked = document.querySelector('input[name="ventaDestino"]:checked');
-            const isCom = checked ? checked.value === 'Comercio' : false;
-            document.getElementById('divNombreCliente').classList.toggle('hidden', isCom);
-            document.getElementById('divComercioSelect').classList.toggle('hidden', !isCom);
-            if (isCom) loadClients();
-        }));
-
-        const prodOptionsHTML = document.getElementById('productOptionsTemplate').innerHTML;
         const prodIngreso = document.getElementById('productoIngreso');
         if(prodIngreso) {
-            prodIngreso.innerHTML = prodOptionsHTML;
+            prodIngreso.innerHTML = document.getElementById('productOptionsTemplate').innerHTML;
             prodIngreso.addEventListener('change', e => fetchStock(e.target.value, document.getElementById('stockIngreso')));
         }
         
@@ -530,10 +441,9 @@
         function toggleInventoryForms() {
             const checked = document.querySelector('input[name="mainMovementType"]:checked');
             if(!checked) return;
-            const val = checked.value;
-            document.getElementById('formIngreso').classList.toggle('hidden', val !== 'Ingreso');
-            document.getElementById('formVenta').classList.toggle('hidden', val !== 'Venta' && val !== 'ConsignacionSalida');
-            document.getElementById('formGestionConsigna').classList.toggle('hidden', val !== 'GestionarConsigna');
+            document.getElementById('formIngreso').classList.toggle('hidden', checked.value !== 'Ingreso');
+            document.getElementById('formVenta').classList.toggle('hidden', checked.value !== 'Venta' && checked.value !== 'ConsignacionSalida');
+            document.getElementById('formGestionConsigna').classList.toggle('hidden', checked.value !== 'GestionarConsigna');
         }
         toggleInventoryForms();
     </script>
