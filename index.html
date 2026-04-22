@@ -66,7 +66,16 @@
                                 <div id="stockIngreso" class="text-right text-sm text-slate-500 font-semibold w-24"></div>
                             </div>
                         </div>
-                        <div><label class="block text-sm font-medium text-slate-700 mb-1">Cantidad:</label><input type="number" id="cantidadIngreso" class="w-full p-3 border rounded-lg border-slate-300"></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Cantidad:</label>
+                                <input type="number" id="cantidadIngreso" class="w-full p-3 border rounded-lg border-slate-300">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Costo Unitario ($):</label>
+                                <input type="number" id="costoIngreso" step="0.01" placeholder="0.00" class="w-full p-3 border rounded-lg border-slate-300">
+                            </div>
+                        </div>
                     </div>
 
                     <div id="formVenta" class="hidden space-y-6">
@@ -146,7 +155,6 @@
         <div id="expenseContent" class="hidden">
             <form id="expenseForm" class="space-y-4">
                 <input type="hidden" name="formType" value="expense">
-                
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Tipo de Gasto:</label>
                     <select id="tipoGasto" name="tipoGasto" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm bg-white">
@@ -158,12 +166,10 @@
                         <option value="Otros">Otros</option>
                     </select>
                 </div>
-
                 <div id="divGastoOtros" class="hidden">
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Especifique el Gasto:</label>
                     <input type="text" id="tipoGastoOtros" name="tipoGastoOtros" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm" placeholder="Ej: Mantenimiento local">
                 </div>
-
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Valor $:</label>
@@ -178,7 +184,6 @@
                         </select>
                     </div>
                 </div>
-
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Método de Pago:</label>
                     <div class="flex gap-4 p-2 bg-slate-50 rounded-lg border border-slate-200">
@@ -186,12 +191,10 @@
                         <label class="flex items-center cursor-pointer"><input type="radio" name="metodoPago" value="Tarjeta" class="mr-2"> <span class="text-sm">Tarjeta</span></label>
                     </div>
                 </div>
-
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Descripción / Notas:</label>
                     <textarea name="descripcionGasto" placeholder="Detalles adicionales..." class="w-full p-3 border border-slate-300 rounded-lg shadow-sm"></textarea>
                 </div>
-
                 <button type="submit" class="w-full bg-sky-600 text-white p-4 rounded-lg font-bold shadow-md hover:bg-sky-700 transition-colors uppercase tracking-wider">Registrar Gasto</button>
             </form>
         </div>
@@ -268,21 +271,14 @@
 
         async function fetchStock(prod, el) {
             if (!prod) return;
-            // Validar si la URL es el placeholder
-            if (FULL_SCRIPT_URL.trim().includes('ESCRIBE_AQUI') || !FULL_SCRIPT_URL.trim().startsWith('http')) {
-                console.warn("URL de Apps Script no válida o no configurada.");
-                return;
-            }
+            if (FULL_SCRIPT_URL.trim().includes('ESCRIBE_AQUI') || !FULL_SCRIPT_URL.trim().startsWith('http')) return;
             el.textContent = '...';
             try {
                 const cleanUrl = FULL_SCRIPT_URL.trim();
                 const res = await fetch(`${cleanUrl}?action=getStock&producto=${encodeURIComponent(prod)}`);
                 const json = await res.json(); 
                 el.textContent = json.success ? `Stock: ${json.stock}` : 'Stock: 0';
-            } catch(e) { 
-                console.error("Error al obtener stock:", e);
-                el.textContent = 'Err'; 
-            }
+            } catch(e) { el.textContent = 'Err'; }
         }
 
         function addProductLine() {
@@ -373,16 +369,13 @@
                 showMessage("Configura la URL de Apps Script en el código.", "error");
                 return;
             }
-
             loader.style.display = 'block'; 
             msg.classList.add('hidden');
             btn.disabled = true;
-            
             try {
                 const movRadio = document.querySelector('input[name="mainMovementType"]:checked');
                 if(!movRadio) throw new Error("Seleccione un tipo de movimiento.");
                 const mov = movRadio.value;
-                
                 let data = { formType: 'inventory', tipoMovimiento: mov };
 
                 if (mov === 'GestionarConsigna') {
@@ -399,6 +392,7 @@
                 } else if (mov === 'Ingreso') {
                     data.producto = document.getElementById('productoIngreso').value;
                     data.cantidad = document.getElementById('cantidadIngreso').value;
+                    data.costo = document.getElementById('costoIngreso').value; // Captura de costo
                     if(!data.producto || !data.cantidad) throw new Error("Complete producto y cantidad.");
                 } else {
                     const lines = Array.from(document.querySelectorAll('.product-line')).map(l => ({ 
@@ -407,10 +401,8 @@
                         precioUnitario: l.querySelector('[name="precioUnitario"]').value, 
                         modoIVA: l.querySelector('[name="modoIVA"]').value 
                     }));
-                    
                     const destRadio = document.querySelector('input[name="ventaDestino"]:checked');
                     const isDelivery = destRadio ? destRadio.value === 'Delivery' : true;
-                    
                     data.productos = lines;
                     data.nombreCliente = mov === 'ConsignacionSalida' ? document.getElementById('numeroFactura').value : (isDelivery ? document.getElementById('nombreClienteDelivery').value : document.getElementById('clienteComercio').value);
                     data.numeroFactura = document.getElementById('numeroFactura').value;
@@ -420,19 +412,11 @@
                     data.comisionPOS = document.getElementById('comisionPOS').value || 3.5;
                     data.incluyeDelivery = document.getElementById('incluyeDelivery').checked;
                     data.montoDelivery = document.getElementById('montoDelivery').value || 0;
-                    
                     if(!data.nombreCliente && mov !== 'Ingreso') throw new Error("Indique el nombre del cliente o empresa.");
                     if(data.productos.length === 0) throw new Error("Añada al menos un producto.");
                 }
-
                 data.descripcionVenta = document.getElementById('descripcionGeneralInventario').value;
-
-                const response = await fetch(FULL_SCRIPT_URL.trim(), { 
-                    method: 'POST', 
-                    body: JSON.stringify(data),
-                    redirect: 'follow'
-                });
-                
+                const response = await fetch(FULL_SCRIPT_URL.trim(), { method: 'POST', body: JSON.stringify(data), redirect: 'follow' });
                 const result = await response.json();
                 if (result.success) { 
                     showMessage(result.message || 'Operación exitosa', 'success');
@@ -444,25 +428,13 @@
                     document.getElementById('stockIngreso').textContent = '';
                     if (mov === 'GestionarConsigna') loadConsignments();
                     toggleInventoryForms();
-                } else { 
-                    throw new Error(result.error || "Error en el servidor"); 
-                }
-            } catch(err) { 
-                console.error("Error al procesar:", err);
-                showMessage(err.message || 'Error de conexión', 'error'); 
-            } finally {
-                loader.style.display = 'none';
-                btn.disabled = false;
-            }
+                } else throw new Error(result.error || "Error en el servidor"); 
+            } catch(err) { showMessage(err.message || 'Error de conexión', 'error'); } 
+            finally { loader.style.display = 'none'; btn.disabled = false; }
         });
 
-        // Lógica de Gastos
         const tipoGastoSelect = document.getElementById('tipoGasto');
-        if(tipoGastoSelect) {
-            tipoGastoSelect.addEventListener('change', (e) => {
-                document.getElementById('divGastoOtros').classList.toggle('hidden', e.target.value !== 'Otros');
-            });
-        }
+        if(tipoGastoSelect) tipoGastoSelect.addEventListener('change', e => document.getElementById('divGastoOtros').classList.toggle('hidden', e.target.value !== 'Otros'));
 
         const expenseForm = document.getElementById('expenseForm');
         if(expenseForm) {
@@ -470,36 +442,21 @@
                 e.preventDefault();
                 const loader = document.getElementById('loader');
                 const btn = e.target.querySelector('button');
-                if (FULL_SCRIPT_URL.trim().includes('ESCRIBE_AQUI') || !FULL_SCRIPT_URL.trim().startsWith('http')) {
-                    showMessage("Configura la URL de Apps Script.", "error");
-                    return;
-                }
+                if (FULL_SCRIPT_URL.trim().includes('ESCRIBE_AQUI') || !FULL_SCRIPT_URL.trim().startsWith('http')) return;
                 loader.style.display = 'block';
                 if(btn) btn.disabled = true;
                 const fd = new FormData(expenseForm);
                 const data = Object.fromEntries(fd);
                 try {
-                    const res = await fetch(FULL_SCRIPT_URL.trim(), { 
-                        method: 'POST', 
-                        body: JSON.stringify(data), 
-                        redirect: 'follow' 
-                    });
+                    const res = await fetch(FULL_SCRIPT_URL.trim(), { method: 'POST', body: JSON.stringify(data), redirect: 'follow' });
                     const json = await res.json();
-                    if(json.success) { 
-                        showMessage('Gasto registrado con éxito', 'success'); 
-                        expenseForm.reset(); 
-                        document.getElementById('divGastoOtros').classList.add('hidden');
-                    } else throw new Error(json.error);
-                } catch(e) { 
-                    showMessage(e.message || 'Error de conexión', 'error'); 
-                } finally {
-                    loader.style.display = 'none';
-                    if(btn) btn.disabled = false;
-                }
+                    if(json.success) { showMessage('Gasto registrado con éxito', 'success'); expenseForm.reset(); document.getElementById('divGastoOtros').classList.add('hidden'); }
+                    else throw new Error(json.error);
+                } catch(e) { showMessage(e.message || 'Error de conexión', 'error'); } 
+                finally { loader.style.display = 'none'; if(btn) btn.disabled = false; }
             });
         }
 
-        // Comercios
         const clientForm = document.getElementById('clientForm');
         if(clientForm) {
             clientForm.addEventListener('submit', async e => {
@@ -511,22 +468,12 @@
                 if(btn) btn.disabled = true;
                 const fd = new FormData(clientForm);
                 try {
-                    const res = await fetch(FULL_SCRIPT_URL.trim(), { 
-                        method: 'POST', 
-                        body: JSON.stringify(Object.fromEntries(fd)), 
-                        redirect: 'follow' 
-                    });
+                    const res = await fetch(FULL_SCRIPT_URL.trim(), { method: 'POST', body: JSON.stringify(Object.fromEntries(fd)), redirect: 'follow' });
                     const json = await res.json();
-                    if(json.success) { 
-                        showMessage('Registro completado', 'success'); 
-                        clientForm.reset(); 
-                    } else throw new Error(json.error);
-                } catch(e) { 
-                    showMessage(e.message || 'Error de conexión', 'error'); 
-                } finally {
-                    loader.style.display = 'none';
-                    if(btn) btn.disabled = false;
-                }
+                    if(json.success) { showMessage('Registro completado', 'success'); clientForm.reset(); }
+                    else throw new Error(json.error);
+                } catch(e) { showMessage(e.message || 'Error de conexión', 'error'); } 
+                finally { loader.style.display = 'none'; if(btn) btn.disabled = false; }
             });
         }
 
@@ -570,7 +517,6 @@
             if (isCom) loadClients();
         }));
 
-        // Inicializar opciones de productos y listeners de stock
         const prodOptionsHTML = document.getElementById('productOptionsTemplate').innerHTML;
         const prodIngreso = document.getElementById('productoIngreso');
         if(prodIngreso) {
@@ -589,7 +535,6 @@
             document.getElementById('formVenta').classList.toggle('hidden', val !== 'Venta' && val !== 'ConsignacionSalida');
             document.getElementById('formGestionConsigna').classList.toggle('hidden', val !== 'GestionarConsigna');
         }
-
         toggleInventoryForms();
     </script>
 </body>
