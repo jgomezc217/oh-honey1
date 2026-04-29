@@ -156,7 +156,6 @@
             </form>
         </div>
         
-        <!-- PESTAÑAS ADICIONALES (Se mantienen igual) -->
         <div id="expenseContent" class="hidden">
             <form id="expenseForm" class="space-y-4">
                 <input type="hidden" name="formType" value="expense">
@@ -189,9 +188,17 @@
                         </select>
                     </div>
                 </div>
-                <div class="flex gap-4 p-2 bg-slate-50 rounded-lg border border-slate-200">
-                    <label class="flex items-center cursor-pointer"><input type="radio" name="metodoPago" value="Efectivo" checked class="mr-2"> <span class="text-sm">Efectivo</span></label>
-                    <label class="flex items-center cursor-pointer"><input type="radio" name="metodoPago" value="Tarjeta" class="mr-2"> <span class="text-sm">Tarjeta</span></label>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Método de Pago:</label>
+                    <div class="flex gap-4 p-2 bg-slate-50 rounded-lg border border-slate-200">
+                        <label class="flex items-center cursor-pointer"><input type="radio" name="metodoPago" value="Efectivo" checked class="mr-2"> <span class="text-sm">Efectivo</span></label>
+                        <label class="flex items-center cursor-pointer"><input type="radio" name="metodoPago" value="Tarjeta" class="mr-2"> <span class="text-sm">Tarjeta</span></label>
+                    </div>
+                </div>
+                <!-- CAMPO DE DESCRIPCIÓN PARA GASTOS -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Descripción / Notas:</label>
+                    <textarea name="descripcionGasto" placeholder="Detalles adicionales del gasto..." class="w-full p-3 border border-slate-300 rounded-lg shadow-sm"></textarea>
                 </div>
                 <button type="submit" class="w-full bg-sky-600 text-white p-4 rounded-lg font-bold shadow-md hover:bg-sky-700 transition-colors uppercase tracking-wider">Registrar Gasto</button>
             </form>
@@ -267,8 +274,8 @@
                         const opt = document.createElement('option');
                         opt.value = c; opt.textContent = c; sel.appendChild(opt);
                     });
-                } else sel.innerHTML = '<option value="" disabled>No hay comercios</option>';
-            } catch(e) { sel.innerHTML = '<option value="" disabled>Error</option>'; }
+                } else sel.innerHTML = '<option value="" disabled>No hay comercios registrados</option>';
+            } catch(e) { sel.innerHTML = '<option value="" disabled>Error al conectar</option>'; }
         }
 
         const movementRadios = document.getElementsByName('mainMovementType');
@@ -335,32 +342,17 @@
                 const q = parseFloat(l.querySelector('[name="cantidad"]').value) || 0;
                 const p = parseFloat(l.querySelector('[name="precioUnitario"]').value) || 0;
                 const modo = l.querySelector('[name="modoIVA"]').value;
-                
-                let neto = 0;
-                let bruto = 0;
-
-                if (modo === 'mas_iva') {
-                    neto = q * p;
-                    bruto = neto * (1 + IVA_RATE);
-                } else if (modo === 'incluido') {
-                    bruto = q * p;
-                    neto = bruto / (1 + IVA_RATE);
-                } else {
-                    neto = q * p;
-                    bruto = neto;
-                }
-                
-                subtotalNeto += neto;
-                totalBruto += bruto;
+                let neto = 0; let bruto = 0;
+                if (modo === 'mas_iva') { neto = q * p; bruto = neto * (1 + IVA_RATE); } 
+                else if (modo === 'incluido') { bruto = q * p; neto = bruto / (1 + IVA_RATE); } 
+                else { neto = q * p; bruto = neto; }
+                subtotalNeto += neto; totalBruto += bruto;
             });
 
             const retencion = aplicaRetencion ? subtotalNeto * RETENCION_RATE : 0;
             const final = totalBruto - retencion;
-
             document.getElementById('saleTotal').textContent = `$${final.toFixed(2)}`;
-            if(aplicaRetencion) {
-                document.getElementById('saleTotal').innerHTML += `<br><span class="text-[10px] text-red-500 font-normal">Ret. GC aplicada: -$${retencion.toFixed(2)}</span>`;
-            }
+            if(aplicaRetencion) document.getElementById('saleTotal').innerHTML += `<br><span class="text-[10px] text-red-500 font-normal">Ret. GC applied: -$${retencion.toFixed(2)}</span>`;
         }
         
         document.getElementById('aplicaRetencionVenta').addEventListener('change', updateSaleTotal);
@@ -396,13 +388,11 @@
             e.preventDefault();
             const loader = document.getElementById('loader');
             const btn = document.getElementById('btnSubmitInventory');
-            
             loader.style.display = 'block'; btn.disabled = true;
             try {
                 const movRadio = document.querySelector('input[name="mainMovementType"]:checked');
                 const mov = movRadio.value;
                 let data = { formType: 'inventory', tipoMovimiento: mov };
-
                 if (mov === 'Ingreso') {
                     data.producto = document.getElementById('productoIngreso').value;
                     data.cantidad = document.getElementById('cantidadIngreso').value;
@@ -436,7 +426,6 @@
                     data.comisionPOS = document.getElementById('comisionPOSConsigna').value || 3.5;
                     data.aplicaRetencion = document.getElementById('aplicaRetencionConsigna').checked;
                 }
-                
                 data.descripcionGeneral = document.getElementById('descripcionGeneralInventario').value;
                 const response = await fetch(FULL_SCRIPT_URL.trim(), { method: 'POST', body: JSON.stringify(data), redirect: 'follow' });
                 const result = await response.json();
@@ -479,13 +468,13 @@
         }
         toggleInventoryForms();
 
-        // Otros eventos
         document.getElementById('expenseForm').addEventListener('submit', async e => {
             e.preventDefault();
             const loader = document.getElementById('loader'); loader.style.display = 'block';
             try {
-                const res = await fetch(FULL_SCRIPT_URL.trim(), { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))), redirect: 'follow' });
-                if((await res.json()).success) { showMessage('Gasto registrado', 'success'); e.target.reset(); }
+                const fd = new FormData(e.target);
+                const res = await fetch(FULL_SCRIPT_URL.trim(), { method: 'POST', body: JSON.stringify(Object.fromEntries(fd)), redirect: 'follow' });
+                if((await res.json()).success) { showMessage('Gasto registrado', 'success'); e.target.reset(); document.getElementById('divGastoOtros').classList.add('hidden'); }
             } catch(e) { showMessage('Error', 'error'); } 
             finally { loader.style.display = 'none'; }
         });
