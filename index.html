@@ -9,7 +9,7 @@
     <style>
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: none; }
-        @keyframes spin { 0 { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .tab-button.active { border-bottom-color: #3b82f6; color: #1e40af; font-weight: 600; }
         #labels-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 1cm; width: 100%; max-width: 21cm; background-color: white; margin: 2rem auto; border-radius: 8px; }
         .label { border: 1px dashed #9ca3af; padding: 12px; border-radius: 8px; font-size: 0.75rem; line-height: 1.4; }
@@ -228,7 +228,7 @@
     </template>
 
     <script>
-        const FULL_SCRIPT_URL = 'ESCRIBE_AQUI_TU_NUEVO_ENLACE_EXEC';
+        const FULL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMapJvU3t9B7c0sfZIQRJbjPZpqjVVQCF9gsJrQd4evSVDCeNnPKlRfdkPLoxkZE8JyA/exec';
         const IVA_RATE = 0.13;
         const RETENCION_RATE = 0.01;
         
@@ -252,6 +252,11 @@
             if(activeContent) activeContent.classList.remove('hidden');
             if(activeBtn) activeBtn.classList.add('active');
             document.getElementById('action-buttons').classList.toggle('hidden', tab !== 'labels');
+            
+            // Pre-cargamos comercios de forma preventiva cada vez que se entra a Movimientos
+            if (tab === 'inventory') {
+                loadClients();
+            }
         }
         
         ['Inventory', 'Expense', 'Clients', 'Labels'].forEach(t => {
@@ -414,8 +419,8 @@
                 } else if (mov === 'Venta' || mov === 'ConsignacionSalida') {
                     data.productos = Array.from(document.querySelectorAll('.product-line')).map(l => ({ 
                         producto: l.querySelector('[name="producto"]').value, 
-                        cantidad: l.querySelector('[name="cantidad"]').value, 
-                        precioUnitario: l.querySelector('[name="precioUnitario"]').value, 
+                        cantidad: l.querySelector('[name="producto"]').value ? (l.querySelector('[name="cantidad"]').value || 0) : 0, 
+                        precioUnitario: l.querySelector('[name="precioUnitario"]').value || 0, 
                         modoIVA: l.querySelector('[name="modoIVA"]').value 
                     }));
                     data.aplicaRetencion = document.getElementById('aplicaRetencionVenta').checked;
@@ -428,11 +433,25 @@
                     
                     if (mov === 'ConsignacionSalida') {
                         data.tipoVenta = 'Consigna';
-                        data.nombreCliente = document.getElementById('clienteComercio').value;
+                        const selectComercio = document.getElementById('clienteComercio');
+                        data.nombreCliente = selectComercio.value;
+                        
+                        // BLOQUEO DE SEGURIDAD FRONT-END: Detener si no se ha seleccionado un comercio
+                        if (!data.nombreCliente || data.nombreCliente.trim() === "") {
+                            showMessage("Por favor, seleccione un comercio válido del listado para registrar la consignación.", "error");
+                            loader.style.display = 'none'; btn.disabled = false;
+                            return;
+                        }
                     } else {
                         const destRadio = document.querySelector('input[name="ventaDestino"]:checked');
                         data.tipoVenta = destRadio.value;
                         data.nombreCliente = data.tipoVenta === 'Delivery' ? document.getElementById('nombreClienteDelivery').value : document.getElementById('clienteComercio').value;
+                        
+                        if (data.tipoVenta === 'Comercio' && (!data.nombreCliente || data.nombreCliente.trim() === "")) {
+                            showMessage("Por favor, seleccione un comercio para procesar esta venta.", "error");
+                            loader.style.display = 'none'; btn.disabled = false;
+                            return;
+                        }
                     }
                 } else if (mov === 'GestionarConsigna') {
                     const selVal = document.getElementById('consignaSelect').value;
@@ -512,6 +531,11 @@
         document.getElementById('print-btn').addEventListener('click', () => window.print());
         document.getElementById('clear-btn').addEventListener('click', () => document.getElementById('labels-container').innerHTML = '');
         document.getElementById('tipoGasto').addEventListener('change', e => document.getElementById('divGastoOtros').classList.toggle('hidden', e.target.value !== 'Otros'));
+
+        // Carga inicial automatizada
+        window.onload = function() {
+            loadClients();
+        }
     </script>
 </body>
 </html>
