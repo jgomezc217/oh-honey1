@@ -9,7 +9,7 @@
     <style>
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: none; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin { 0 { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .tab-button.active { border-bottom-color: #3b82f6; color: #1e40af; font-weight: 600; }
         #labels-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 1cm; width: 100%; max-width: 21cm; background-color: white; margin: 2rem auto; border-radius: 8px; }
         .label { border: 1px dashed #9ca3af; padding: 12px; border-radius: 8px; font-size: 0.75rem; line-height: 1.4; }
@@ -125,7 +125,6 @@
                             <div><label class="text-xs font-bold text-slate-600 uppercase">Facturar (Vendidas):</label><input type="number" id="cantVentaConsigna" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm" placeholder="0"></div>
                             <div><label class="text-xs font-bold text-slate-600 uppercase">Devolver (Bodega):</label><input type="number" id="cantDevolucionConsigna" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm" placeholder="0"></div>
                         </div>
-                        <!-- Campos de Precio para Liquidación -->
                         <div id="consignaPrecioFields" class="hidden bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
                              <div class="grid grid-cols-2 gap-4">
                                 <div><label class="text-xs font-bold">Precio Unitario:</label><input type="number" id="precioUnitarioConsigna" step="0.01" class="w-full p-2 border rounded border-slate-300"></div>
@@ -195,7 +194,6 @@
                         <label class="flex items-center cursor-pointer"><input type="radio" name="metodoPago" value="Tarjeta" class="mr-2"> <span class="text-sm">Tarjeta</span></label>
                     </div>
                 </div>
-                <!-- CAMPO DE DESCRIPCIÓN PARA GASTOS -->
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Descripción / Notas:</label>
                     <textarea name="descripcionGasto" placeholder="Detalles adicionales del gasto..." class="w-full p-3 border border-slate-300 rounded-lg shadow-sm"></textarea>
@@ -230,7 +228,7 @@
     </template>
 
     <script>
-        const FULL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMapJvU3t9B7c0sfZIQRJbjPZpqjVVQCF9gsJrQd4evSVDCeNnPKlRfdkPLoxkZE8JyA/exec';
+        const FULL_SCRIPT_URL = 'ESCRIBE_AQUI_TU_NUEVO_ENLACE_EXEC';
         const IVA_RATE = 0.13;
         const RETENCION_RATE = 0.01;
         
@@ -286,10 +284,25 @@
             document.getElementById('formIngreso').classList.toggle('hidden', val !== 'Ingreso');
             document.getElementById('formVenta').classList.toggle('hidden', val !== 'Venta' && val !== 'ConsignacionSalida');
             document.getElementById('formGestionConsigna').classList.toggle('hidden', val !== 'GestionarConsigna');
+            
+            if (val === 'ConsignacionSalida') {
+                document.getElementById('lblFactura').textContent = "Referencia/Factura:";
+                document.getElementById('destinoVentaContainer').classList.add('hidden');
+                document.getElementById('divNombreCliente').classList.add('hidden');
+                document.getElementById('divComercioSelect').classList.remove('hidden');
+                loadClients();
+            } else if (val === 'Venta') {
+                document.getElementById('lblFactura').textContent = "Referencia/Factura:";
+                document.getElementById('destinoVentaContainer').classList.remove('hidden');
+                const destRadio = document.querySelector('input[name="ventaDestino"]:checked');
+                const isCom = destRadio ? destRadio.value === 'Comercio' : false;
+                document.getElementById('divNombreCliente').classList.toggle('hidden', isCom);
+                document.getElementById('divComercioSelect').classList.toggle('hidden', !isCom);
+                if (isCom) loadClients();
+            }
+            
             if (val === 'GestionarConsigna') loadConsignments();
             if ((val === 'Venta' || val === 'ConsignacionSalida') && document.getElementById('productLines').children.length === 0) addProductLine();
-            const destRadio = document.querySelector('input[name="ventaDestino"]:checked');
-            if (destRadio && destRadio.value === 'Comercio') loadClients();
         }));
 
         async function fetchStock(prod, el) {
@@ -352,7 +365,7 @@
             const retencion = aplicaRetencion ? subtotalNeto * RETENCION_RATE : 0;
             const final = totalBruto - retencion;
             document.getElementById('saleTotal').textContent = `$${final.toFixed(2)}`;
-            if(aplicaRetencion) document.getElementById('saleTotal').innerHTML += `<br><span class="text-[10px] text-red-500 font-normal">Ret. GC applied: -$${retencion.toFixed(2)}</span>`;
+            if(aplicaRetencion) document.getElementById('saleTotal').innerHTML += `<br><span class="text-[10px] text-red-500 font-normal">Ret. GC aplicada: -$${retencion.toFixed(2)}</span>`;
         }
         
         document.getElementById('aplicaRetencionVenta').addEventListener('change', updateSaleTotal);
@@ -393,6 +406,7 @@
                 const movRadio = document.querySelector('input[name="mainMovementType"]:checked');
                 const mov = movRadio.value;
                 let data = { formType: 'inventory', tipoMovimiento: mov };
+                
                 if (mov === 'Ingreso') {
                     data.producto = document.getElementById('productoIngreso').value;
                     data.cantidad = document.getElementById('cantidadIngreso').value;
@@ -405,15 +419,21 @@
                         modoIVA: l.querySelector('[name="modoIVA"]').value 
                     }));
                     data.aplicaRetencion = document.getElementById('aplicaRetencionVenta').checked;
-                    const destRadio = document.querySelector('input[name="ventaDestino"]:checked');
-                    data.tipoVenta = destRadio.value;
-                    data.nombreCliente = mov === 'ConsignacionSalida' ? document.getElementById('numeroFactura').value : (data.tipoVenta === 'Delivery' ? document.getElementById('nombreClienteDelivery').value : document.getElementById('clienteComercio').value);
                     data.numeroFactura = document.getElementById('numeroFactura').value;
                     data.esMuestra = document.getElementById('esMuestra').checked;
                     data.pagoConPOS = document.getElementById('pagoConPOS').checked;
                     data.comisionPOS = document.getElementById('comisionPOS').value || 3.5;
                     data.incluyeDelivery = document.getElementById('incluyeDelivery').checked;
                     data.montoDelivery = document.getElementById('montoDelivery').value || 0;
+                    
+                    if (mov === 'ConsignacionSalida') {
+                        data.tipoVenta = 'Consigna';
+                        data.nombreCliente = document.getElementById('clienteComercio').value;
+                    } else {
+                        const destRadio = document.querySelector('input[name="ventaDestino"]:checked');
+                        data.tipoVenta = destRadio.value;
+                        data.nombreCliente = data.tipoVenta === 'Delivery' ? document.getElementById('nombreClienteDelivery').value : document.getElementById('clienteComercio').value;
+                    }
                 } else if (mov === 'GestionarConsigna') {
                     const selVal = document.getElementById('consignaSelect').value;
                     const consData = JSON.parse(selVal);
@@ -426,7 +446,7 @@
                     data.comisionPOS = document.getElementById('comisionPOSConsigna').value || 3.5;
                     data.aplicaRetencion = document.getElementById('aplicaRetencionConsigna').checked;
                 }
-                data.descripcionGeneral = document.getElementById('descripcionGeneralInventario').value;
+                data.descripcionVenta = document.getElementById('descripcionGeneralInventario').value;
                 const response = await fetch(FULL_SCRIPT_URL.trim(), { method: 'POST', body: JSON.stringify(data), redirect: 'follow' });
                 const result = await response.json();
                 if (result.success) { 
